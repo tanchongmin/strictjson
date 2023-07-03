@@ -9,6 +9,12 @@ A Strict JSON Framework for LLM Outputs
 - Don't like the extra baggage of OpenAI Functions and LangChain?
 - Then Strict JSON Framework is for you.
 
+# How it works
+- Input your desired output JSON format
+- Strict JSON Framework will always return LLM output in your desired JSON format (returns as JSON, not text)
+- It prompts GPT iterately via self-correcting rule-based error messages, and gets the desired output after a few iterations
+- If it fails to get it after the iteration limit (default: 2), it outputs an empty JSON
+
 # Features:
 ## Overall Open-ended generation
 - **system_prompt**: Write in whatever you want GPT to become. "You are a \<purpose in life\>"
