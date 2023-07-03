@@ -1,5 +1,7 @@
 # strictjson
 A Strict JSON Framework for LLM Outputs
+By John Tan Chong Min
+3 Jul 2023
 
 - Ever wanted LLMs to generate exactly what you want and nothing more?
 - Want LLMs to do classification easily by choosing from a list of categories?
