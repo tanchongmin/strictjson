@@ -61,7 +61,8 @@ print(res)
 
 - You can also perform chain-of-thought prompting by ordering the json fields in the right way
 - Example
-    - Day planner has much better output if broad plan is generated first before detailed plan
+    - Generate broad plan, and then condition on broad plan to generate detailed plan
+    - Can do so by just specifying "Broad Plan" as the first output field, and "Detailed Plan" as the next output field (sequence matters!)
     - We can also prompt the model for thoughts, action, observation (ReAct framework) as part of json output
     - We can also prompt the model for reflection (RefleXion framework), and even combine the two together!
  
