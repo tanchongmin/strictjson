@@ -16,6 +16,19 @@ A Strict JSON Framework for LLM Outputs
 - **output_format**: JSON format with the key as the output key, and the value as the output description
     - The output keys will be preserved exactly, while GPT will generate content to match the description of the value as best as possible
  
+#### Example Usage
+```python
+res = strict_output(system_prompt = 'You are a classifier',
+                    user_prompt = 'It is a beautiful day',
+                    output_format = {"Sentiment": "Type of Sentiment",
+                                    "Tense": "Type of Tense"})
+                                    
+print(res)
+```
+
+#### Example output
+```{'Sentiment': 'Positive', 'Tense': 'Present'}```
+ 
 ## List-based constraining of outputs
 
 - You can constrain the output of a field by using a list of categories. Then GPT will treat it as a classification problem and return one of the categories
