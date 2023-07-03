@@ -9,7 +9,7 @@ By John Tan Chong Min
 
 - Then Strict JSON Framework is for you.
 
-- Featuring:
+# Features:
 ## Overall Open-ended generation
 - **system_prompt**: Write in whatever you want GPT to become. "You are a \<purpose in life\>"
 - **user_prompt**: The user input. Later, when we use it as a function, this is the function input
