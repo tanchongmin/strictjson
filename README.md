@@ -8,6 +8,7 @@ A Strict JSON Framework for LLM Outputs
 - Want LLMs to do classification easily by choosing from a list of categories?
 - Don't like the extra baggage of OpenAI Functions and LangChain?
 - Then Strict JSON Framework is for you.
+- TODO: Integrate with the SymbolicAI framework - https://github.com/Xpitfire/symbolicai
 
 # How it works
 - Input your desired output JSON format
