@@ -2,6 +2,7 @@
 A Strict JSON Framework for LLM Outputs
 - By John Tan Chong Min
 - 3 Jul 2023
+- Video tutorial: https://www.youtube.com/watch?v=A6sIh-lmApk
 
 # Introduction
 - Ever wanted LLMs to generate exactly what you want and nothing more?
