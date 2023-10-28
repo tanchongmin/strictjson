@@ -1,3 +1,39 @@
+# stricttext
+- Strict JSON v2
+- 28 Oct 2023
+
+- Better than vanilla Strict JSON if you want to output ' or " or \ that may break a json.loads()
+## Key Guideline: Bare Minimum, Functional Concept
+- "Fit everything into a string, because it works"
+- You will get everything back as a string, and you can then convert it to int, float, code, array up to your liking
+- With strict_text, you can get any kind of answers including those with lots of ' or " or { or } or \
+- You don't even need to match brackets { or quotation marks ' in the json fields for this to work
+- Fewer features than vanilla Strict JSON (such as list-based constraining, dynamic inputs), but you can always just type it out in system prompt yourself
+
+## Overall Open-ended generation (advanced)
+- More advanced demonstration involving code and multiple generation that would typically break ```json.loads()```
+
+- **system_prompt**: Write in whatever you want GPT to become. "You are a \<purpose in life\>"
+- **user_prompt**: The user input. Later, when we use it as a function, this is the function input
+- **output_format**: JSON format with the key as the output key, and the value as the output description
+    - The output keys will be preserved exactly, while GPT will generate content to match the description of the value as best as possible
+
+#### Example Usage
+```python
+res = strict_text(system_prompt = 'You are a code generator, generating code to fulfil a task',
+                    user_prompt = 'Sum all elements in a given array p',
+                    output_format = {"Elaboration": "How you would do it",
+                                     "C": "Code in C",
+                                    "Python": "Code in Python"})
+                                    
+print(res)
+```
+
+#### Example output
+```{'Elaboration': 'To sum all elements in a given array, you can iterate through each element of the array and add it to a running total.', 'C': 'int sumArray(int p[], int size) {\\n    int sum = 0;\\n    for (int i = 0; i < size; i++) {\\n        sum += p[i];\\n    }\\n    return sum;\\n}', 'Python': 'def sum_array(p):\\n    sum = 0\\n    for num in p:\\n        sum += num\\n    return sum'}```
+
+~ ~ ~ ~ ~
+
 # strictjson
 A Strict JSON Framework for LLM Outputs
 - By John Tan Chong Min
