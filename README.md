@@ -35,7 +35,7 @@ print(res)
 
 ~ ~ ~ ~ ~
 
-# strictjson
+# strictjson (Original)
 A Strict JSON Framework for LLM Outputs
 - By John Tan Chong Min
 - 3 Jul 2023
