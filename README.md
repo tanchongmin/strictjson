@@ -1,4 +1,5 @@
 # stricttext
+A Strict JSON Framework for LLM Outputs, that fixes problems with json.loads() dannot solve
 - Strict JSON v2
 - 28 Oct 2023
 
