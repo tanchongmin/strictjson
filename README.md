@@ -31,7 +31,11 @@ print(res)
 ```
 
 #### Example output
-```{'Elaboration': 'To sum all elements in a given array, you can iterate through each element of the array and add it to a running total.', 'C': 'int sumArray(int p[], int size) {\\n    int sum = 0;\\n    for (int i = 0; i < size; i++) {\\n        sum += p[i];\\n    }\\n    return sum;\\n}', 'Python': 'def sum_array(p):\\n    sum = 0\\n    for num in p:\\n        sum += num\\n    return sum'}```
+```{'Elaboration': 'To sum all elements in a given array, you can iterate through each element of the array and keep adding them to a running total.', ```
+
+```'C': 'int sum = 0;\\nfor (int i = 0; i < n; i++) {\\n    sum += p[i];\\n}', ```
+
+```'Python': 'sum = 0\\nfor i in range(len(p)):\\n    sum += p[i]'}```
 
 ~ ~ ~ ~ ~
 
