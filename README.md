@@ -2,6 +2,7 @@
 A Strict JSON Framework for LLM Outputs, that fixes problems with json.loads() dannot solve
 - Strict JSON v2
 - 28 Oct 2023
+- Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
 
 - Better than vanilla Strict JSON if you want to output ' or " or \ that may break a json.loads()
 ## Key Guideline: Bare Minimum, Functional Concept
