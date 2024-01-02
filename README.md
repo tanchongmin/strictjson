@@ -8,6 +8,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems with json.loads() d
 ## Key Guideline: Bare Minimum, Functional Concept
 - "Fit everything into a string, because it works"
 - You will get everything back as a string, and you can then convert it to int, float, code, array up to your liking
+- Update (2 Jan 2024): with ```literal_eval = True``` as the default parameter for ```strict_text()```, if the output field is a literal (e.g. strings, bytes, numbers, tuples, lists, dicts, sets, booleans, None and Ellipsis)
 - With strict_text, you can get any kind of answers including those with lots of ' or " or { or } or \
 - You don't even need to match brackets { or quotation marks ' in the json fields for this to work
 - Fewer features than vanilla Strict JSON (such as list-based constraining, dynamic inputs), but you can always just type it out in system prompt yourself
