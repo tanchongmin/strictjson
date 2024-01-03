@@ -40,7 +40,7 @@ print(res)
 
 ~ ~ ~ ~ ~
 
-# 3. How to use (Functions)
+# Strict JSON Functions
 
 ## Overview
 - Enhances ```strict_text()``` with a function-like interface for repeated use of modular LLM-based functions
