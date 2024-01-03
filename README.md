@@ -1,6 +1,5 @@
-# stricttext
+# Strict JSON v2
 A Strict JSON Framework for LLM Outputs, that fixes problems with json.loads() dannot solve
-- Strict JSON v2
 - 28 Oct 2023
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
 
@@ -41,7 +40,7 @@ print(res)
 
 ~ ~ ~ ~ ~
 
-# strictjson (Original)
+# Strict JSON (Original)
 A Strict JSON Framework for LLM Outputs
 - By John Tan Chong Min
 - 3 Jul 2023
