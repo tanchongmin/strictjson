@@ -25,12 +25,11 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 ## Basic Generation
 - **system_prompt**: Write in whatever you want the LLM to become. "You are a \<purpose in life\>"
 - **user_prompt**: The user input. Later, when we use it as a function, this is the function input
-- **output_format**: JSON format with the key as the output key, and the value as the output description
+- **output_format**: JSON of output variables in a dictionary, with the key as the output key, and the value as the output description
     - The output keys will be preserved exactly, while GPT will generate content to match the description of the value as best as possible
  
 #### Example Usage
 ```python
-
 res = strict_json(system_prompt = 'You are a classifier',
                     user_prompt = 'It is a beautiful and sunny day',
                     output_format = {'Sentiment': 'Type of Sentiment',
@@ -75,9 +74,8 @@ print(res)
     - **output_type** - Dictionary containing output variable names as keys and mapping functions as values (need not contain all variables)
     - **kwargs** - Additional arguments you would like to pass on to the ```strict_json``` function
         
-        
 - Outputs:
-    Dictionary of all the output variables (similar to ```strict_json```)
+    JSON of output variables in a dictionary (similar to ```strict_json```)
     
 #### Example Usage 1 (Description only)
 ```python
