@@ -31,11 +31,12 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
  
 #### Example Usage
 ```python
+
 res = strict_json(system_prompt = 'You are a classifier',
                     user_prompt = 'It is a beautiful and sunny day',
-                    output_format = {"Sentiment": "Type of Sentiment",
-                                    "Adjectives": "List of adjectives",
-                                    "Words": "Number of words"})
+                    output_format = {'Sentiment': 'Type of Sentiment',
+                                    'Adjectives': 'List of adjectives',
+                                    'Words': 'Number of words'})
                                     
 print(res)
 ```
