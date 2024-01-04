@@ -18,7 +18,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 
 ## How does it work?
 - Extract JSON values as a string using a special regex (add delimiters to ```key``` to make ```###key###```) to split keys and values
-- Uses ```ast.literal_eval``` to best match the string to a literal (e.g. int, string, dict) [Set ```literal_eval = False``` to preserve output as string]
+- By default, uses ```ast.literal_eval``` to best match the string to a literal (e.g. int, string, dict). Set ```literal_eval = False``` when calling ```strict_json``` to preserve output fields as string
 - Ensures that all JSON fields are output by LLM, if not it will feed in error message to LLM to generate better (default: 2 tries)
 
 # Features:
