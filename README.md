@@ -22,7 +22,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 - Ensures that all JSON fields are output by LLM, if not it will feed in error message to LLM to iteratively correct its generation (default: 3 tries)
 
 # Features:
-## Basic generation
+## Basic Generation
 - **system_prompt**: Write in whatever you want the LLM to become. "You are a \<purpose in life\>"
 - **user_prompt**: The user input. Later, when we use it as a function, this is the function input
 - **output_format**: JSON format with the key as the output key, and the value as the output description
