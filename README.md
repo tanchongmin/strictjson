@@ -33,15 +33,15 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 ```python
 res = strict_json(system_prompt = 'You are a classifier',
                     user_prompt = 'It is a beautiful day',
-                    output_format = {"Sentiment": "Type of Sentiment",
-                                    "Tense": "Type of Tense",
-                                    "Words": "Number of words"})
+                    output_format = {'Sentiment': 'Type of Sentiment',
+                                    'Tense': 'Type of Tense',
+                                    'Words': 'Number of words'})
                                     
 print(res)
 ```
 
 #### Example output
-```{'Sentiment': 'Positive', 'Tense': 'Present', 'Words': 5}```
+```{'Sentiment': 'Positive', 'Tense': 'Present', 'Words': 5```
 
 ## Advanced Generation
 - More advanced demonstration involving code and multiple generation that would typically break ```json.loads()```
@@ -50,9 +50,9 @@ print(res)
 ```python
 res = strict_json(system_prompt = 'You are a code generator, generating code to fulfil a task',
                     user_prompt = 'Sum all elements in a given array p',
-                    output_format = {"Elaboration": "How you would do it",
-                                     "C": "Code in C",
-                                    "Python": "Code in Python"})
+                    output_format = {'Elaboration': 'How you would do it',
+                                     'C': 'Code in C',
+                                    'Python': 'Code in Python'})
                                     
 print(res)
 ```
