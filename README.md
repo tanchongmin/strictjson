@@ -48,20 +48,20 @@ print(res)
 #### Example Usage
 ```python
 res = strict_json(system_prompt = 'You are a code generator, generating code to fulfil a task',
-                    user_prompt = 'Sum all elements in a given array p',
+                    user_prompt = 'Given array p, output a function named func_sum to return its sum',
                     output_format = {'Elaboration': 'How you would do it',
-                                     'C': 'Code in C',
-                                    'Python': 'Code in Python'})
+                                     'C': 'Code',
+                                    'Python': 'Code'})
                                     
 print(res)
 ```
 
 #### Example output
-```{'Elaboration': 'To sum all elements in a given array, you can iterate through each element of the array and keep adding them to a running total.', ```
+```{'Elaboration': 'To calculate the sum of an array, we can iterate through each element of the array and add it to a running total. Finally, we return the total as the result.', ```
 
-```'C': 'int sum = 0;\\nfor (int i = 0; i < n; i++) {\\n    sum += p[i];\\n}', ```
+```'C': 'int func_sum(int p[], int size) {\\n    int sum = 0;\\n    for (int i = 0; i < size; i++) {\\n        sum += p[i];\\n    }\\n    return sum;\\n}', ```
 
-```'Python': 'sum = 0\\nfor i in range(len(p)):\\n    sum += p[i]'}```
+```'Python': 'def func_sum(p):\\n    sum = 0\\n    for num in p:\\n        sum += num\\n    return sum'}```
 
 ## Strict JSON Functions
 - Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
