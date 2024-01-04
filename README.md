@@ -110,7 +110,7 @@ fn(2, 10)
 #### Example Output 2
 ```{'output': 20}```
 
-#### Example Usage 3 (Description, Examples and Types)
+#### Example Usage 3 (Description, Examples and Type Forcing)
 ```python
 # Construct the function: var1 will be first input variable, var2 will be second input variable and so on
 fn = strict_function(fn_description = 'Output the sum and difference of var1 and var2', 
