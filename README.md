@@ -125,8 +125,6 @@ fn(3, 4)
 #### Example Output 3
 ```{'sum': 7, 'difference': '1'}```
 
-~ ~ ~ ~ ~
-
 # Future Features:
 - Agents with Tool Use
 - Conversational Agents
