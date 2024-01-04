@@ -6,23 +6,21 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 
 - Works for JSON outputs with ' or " or \ or { or } or unmatched braces/brackets that may break a json.loads()
 
-# How do I install this?
+## How do I install this?
 
 1. Download entire directory and go to root folder
 2. Download python version 3.11 (https://www.python.org/downloads/) - should work for later versions as well, but this was tested on python 3.11
 3. pip install -r requirements.txt
 
-# How do I use this?
+## How do I use this?
 1. Replace ```<YOUR API KEY HERE``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
 2. Copy and paste ```strict_text``` and ```strict_function``` from Strict_JSON_v2.ipynb
 3. Use the functions as needed
 
-# How does it work?
+## How does it work?
 - Extract JSON values as a string using a special regex (add delimiters to key to make ###key###) to split keys and values
 - Use ```ast.literal_eval``` to best match the string to a literal (e.g. int, string, dict)
 - Ensures that all JSON fields are output by LLM, if not it will feed in error message to LLM to generate better (default: 2 tries)
-
-~ ~ ~ ~ ~
 
 # Features:
 ## Basic generation
