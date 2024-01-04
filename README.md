@@ -13,7 +13,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 3. pip install -r requirements.txt
 
 ## How do I use this?
-1. Replace ```<YOUR API KEY HERE``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
+1. Replace ```<YOUR API KEY HERE>``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
 2. Copy and paste ```strict_text``` and ```strict_function``` from Strict_JSON_v2.ipynb
 3. Use the functions as needed
 
