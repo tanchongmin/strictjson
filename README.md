@@ -7,7 +7,6 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 - Works for JSON outputs with ' or " or \ or { or } or unmatched braces/brackets that may break a json.loads()
 
 ## How do I install this?
-
 1. Download entire directory and go to root folder
 2. Download python version 3.11 (https://www.python.org/downloads/) - should work for later versions as well, but this was tested on python 3.11
 3. pip install -r requirements.txt
