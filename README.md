@@ -5,6 +5,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems with json.loads() d
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
 
 - Better than vanilla Strict JSON if you want to output ' or " or \ that may break a json.loads()
+  
 ## Key Guideline: Bare Minimum, Functional Concept
 - "Fit everything into a string, because it works"
 - You will get everything back as a string, and you can then convert it to int, float, code, array up to your liking
@@ -105,7 +106,20 @@ fn(3, 4)
 
 ~ ~ ~ ~ ~
 
-# Strict JSON (Original)
+# How do I install this?
+
+1. Download entire directory and go to root folder
+2. Download python version 3.11 (https://www.python.org/downloads/) - should work for later versions as well, but this was tested on python 3.11
+3. pip install -r requirements.txt
+
+# How do I use this?
+1. Replace ```<YOUR API KEY HERE``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
+2. Copy and paste ```strict_text``` and ```strict_function``` from Strict_JSON_v2.ipynb
+3. Use the functions as needed
+
+~ ~ ~ ~ ~
+
+# Strict JSON (Original - Deprecated as not as reliablle as compared to Strict JSON v2. Function still via as ```strict_json()```)
 A Strict JSON Framework for LLM Outputs
 - By John Tan Chong Min
 - 3 Jul 2023
@@ -179,6 +193,8 @@ print(res)
 - In order to save tokens, we may want to process multiple input items using the same output_format schema
 - We can then pass in a list into user_prompt to get the function to output a list of json
 - There will be one json in the output for each element of the input list
+
+  
 
 ## Future Features:
 - LLM + Rules-based Adaptive Functions
