@@ -1,6 +1,7 @@
 # Strict JSON v2
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
+- Optional Integration with OpenAI JSON Mode
 - Updated: 4 Jan 2024 
 - Created: 28 Oct 2023
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
@@ -121,6 +122,25 @@ fn(3, 4)
 
 #### Example Output 3
 ```{'sum': 7, 'difference': '1'}```
+
+## Integrating with OpenAI JSON Mode
+- If you want to use the OpenAI JSON Mode (which is pretty good btw), you can simply add in ```openai_json_mode = True``` in ```strict_json``` or ```strict_function```
+- Note that the model must be one of ```gpt-4-1106-preview``` or ```gpt-3.5-turbo-1106```. We will set it to ```gpt-3.5-turbo-1106``` by default if you provide an invalid model
+
+#### Example Usage
+```python
+res = strict_json(system_prompt = 'You are a classifier',
+                    user_prompt = 'It is a beautiful and sunny day',
+                    output_format = {'Sentiment': 'Type of Sentiment',
+                                    'Adjectives': 'List of adjectives',
+                                    'Words': 'Number of words'},
+                    openai_json_mode = True) # Toggle this to True
+                                    
+print(res)
+```
+
+#### Example output
+```{'Sentiment': 'positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 6}```
 
 # Future Features:
 - Agents with Tool Use
