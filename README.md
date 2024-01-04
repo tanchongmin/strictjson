@@ -15,7 +15,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 ## How do I use this? 
 1. Replace ```<YOUR API KEY HERE>``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
 2. Copy and paste ```strict_json``` and ```strict_function``` from Strict_JSON_v2.ipynb 
-3. Use the functions as needed (Note: In the future update, it will be as a python package/library, so you don't have to copy and paste the functions anymore)
+3. Use the functions as needed (Note: In the future, it will be as a python package/library for easy usage)
 
 ## How does it work?
 - Extract JSON values as a string using a special regex (add delimiters to ```key``` to make ```###key###```) to split keys and values
