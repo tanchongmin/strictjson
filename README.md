@@ -4,8 +4,21 @@ A Strict JSON Framework for LLM Outputs, that fixes problems with json.loads() d
 - Created: 28 Oct 2023
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
 
-- Better than vanilla Strict JSON if you want to output ' or " or \ that may break a json.loads()
-  
+- Works for JSON outputs with ' or " or \ or { or } or unmatched braces/brackets that may break a json.loads()
+
+# How do I install this?
+
+1. Download entire directory and go to root folder
+2. Download python version 3.11 (https://www.python.org/downloads/) - should work for later versions as well, but this was tested on python 3.11
+3. pip install -r requirements.txt
+
+# How do I use this?
+1. Replace ```<YOUR API KEY HERE``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
+2. Copy and paste ```strict_text``` and ```strict_function``` from Strict_JSON_v2.ipynb
+3. Use the functions as needed
+
+~ ~ ~ ~ ~
+
 ## Key Guideline: Bare Minimum, Functional Concept
 - "Fit everything into a string, because it works"
 - You will get everything back as a string, and you can then convert it to int, float, code, array up to your liking
@@ -103,19 +116,6 @@ fn(3, 4)
 
 #### Example Output 3
 ```{'sum': 7, 'difference': '1'}```
-
-~ ~ ~ ~ ~
-
-# How do I install this?
-
-1. Download entire directory and go to root folder
-2. Download python version 3.11 (https://www.python.org/downloads/) - should work for later versions as well, but this was tested on python 3.11
-3. pip install -r requirements.txt
-
-# How do I use this?
-1. Replace ```<YOUR API KEY HERE``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
-2. Copy and paste ```strict_text``` and ```strict_function``` from Strict_JSON_v2.ipynb
-3. Use the functions as needed
 
 ~ ~ ~ ~ ~
 
