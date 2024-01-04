@@ -115,7 +115,8 @@ fn(3, 4)
 
 ~ ~ ~ ~ ~
 
-# Strict JSON v1 (Deprecated - not as reliablle as compared to Strict JSON v2. Function still available via as ```strict_json```)
+# Strict JSON v1 
+## (Deprecated - not as reliablle as compared to Strict JSON v2. Function still available via as ```strict_json```)
 A Strict JSON Framework for LLM Outputs
 - By John Tan Chong Min
 - 3 Jul 2023
