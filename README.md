@@ -63,8 +63,6 @@ print(res)
 
 ```'Python': 'sum = 0\\nfor i in range(len(p)):\\n    sum += p[i]'}```
 
-~ ~ ~ ~ ~
-
 # Strict JSON Functions
 
 ## Overview
@@ -129,6 +127,6 @@ fn(3, 4)
 
 ~ ~ ~ ~ ~
 
-## Future Features:
+# Future Features:
 - Agents with Tool Use
 - Conversational Agents
