@@ -5,6 +5,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
 
 - Works for JSON outputs with ' or " or \ or { or } or unmatched braces/brackets that may break a json.loads()
+- Collaborators welcome
 
 ## How do I install this?
 1. Download entire directory and go to root folder
