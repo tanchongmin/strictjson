@@ -64,7 +64,7 @@ print(res)
 
 ```'Python': 'sum = 0\\nfor i in range(len(p)):\\n    sum += p[i]'}```
 
-# Strict JSON Functions
+## Strict JSON Functions
 - Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
 - Inputs (compulsory):
     - **fn_description** - Function description to describe process of transforming input variables to output variables
