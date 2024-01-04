@@ -1,4 +1,4 @@
-# Strict JSON v2
+# Strict JSON
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Updated: 3 Jan 2024
 - Created: 28 Oct 2023
