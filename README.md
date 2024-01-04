@@ -14,7 +14,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 
 ## How do I use this?
 1. Replace ```<YOUR API KEY HERE>``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
-2. Copy and paste ```strict_text``` and ```strict_function``` from Strict_JSON_v2.ipynb
+2. Copy and paste ```strict_json``` and ```strict_function``` from Strict_JSON_v2.ipynb
 3. Use the functions as needed
 
 ## How does it work?
@@ -31,7 +31,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
  
 #### Example Usage
 ```python
-res = strict_text(system_prompt = 'You are a classifier',
+res = strict_json(system_prompt = 'You are a classifier',
                     user_prompt = 'It is a beautiful day',
                     output_format = {"Sentiment": "Type of Sentiment",
                                     "Tense": "Type of Tense"})
@@ -47,7 +47,7 @@ print(res)
 
 #### Example Usage
 ```python
-res = strict_text(system_prompt = 'You are a code generator, generating code to fulfil a task',
+res = strict_json(system_prompt = 'You are a code generator, generating code to fulfil a task',
                     user_prompt = 'Sum all elements in a given array p',
                     output_format = {"Elaboration": "How you would do it",
                                      "C": "Code in C",
@@ -66,7 +66,7 @@ print(res)
 # Strict JSON Functions
 
 ## Overview
-- Enhances ```strict_text()``` with a function-like interface for repeated use of modular LLM-based functions
+- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
 - Inputs (compulsory):
     - **fn_description** - Function description to describe process of transforming input variables to output variables
     - **output_format** - Dictionary containing output variables names and description for each variable. There must be at least one output variable
@@ -74,11 +74,11 @@ print(res)
     - **examples** - Examples in Dictionary form with the input and output variables (list if more than one)
     - **input_type** - Dictionary containing input variable names and mapping function for variables (need not contain all variables)
     - **output_type** - Dictionary containing output variable names and mapping function for variables (need not contain all variables)
-    - **kwargs** - Additional arguments you would like to pass on to the ```strict_text``` function
+    - **kwargs** - Additional arguments you would like to pass on to the ```strict_json``` function
         
         
 - Outputs:
-    Dictionary of all the output variables (similar to ```strict_text```)
+    Dictionary of all the output variables (similar to ```strict_json```)
     
 #### Example Usage 1 (Description only)
 ```python
