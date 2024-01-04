@@ -44,7 +44,7 @@ print(res)
 ```{'Sentiment': 'positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
 
 ## Advanced Generation
-- More advanced demonstration involving code and multiple generation that would typically break ```json.loads()```
+- More advanced demonstration involving code that would typically break ```json.loads()```
 
 #### Example Usage
 ```python
