@@ -42,7 +42,7 @@ print(res)
 ```
 
 #### Example output
-```{'Sentiment': 'positive', 'Entities': ['beautiful', 'sunny'], 'Words': 7}```
+```{'Sentiment': 'positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
 
 ## Advanced Generation
 - More advanced demonstration involving code and multiple generation that would typically break ```json.loads()```
