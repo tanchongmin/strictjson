@@ -115,13 +115,12 @@ fn(3, 4)
 
 ~ ~ ~ ~ ~
 
-# Strict JSON v1 
-## Deprecated - not as reliable as compared to Strict JSON v2. 
-## Function still available via as ```strict_json```
+# Strict JSON v1 (Deprecated - StrictJSON v2 is more reliable)
 A Strict JSON Framework for LLM Outputs
 - By John Tan Chong Min
 - 3 Jul 2023
 - Video tutorial: https://www.youtube.com/watch?v=A6sIh-lmApk
+- function still available as ```strict_json```
 
 # Introduction
 - Ever wanted LLMs to generate exactly what you want and nothing more?
