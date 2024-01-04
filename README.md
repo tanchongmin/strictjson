@@ -1,6 +1,6 @@
 # Strict JSON v2
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
-- Updated: 3 Jan 2024
+- Updated: 4 Jan 2024
 - Created: 28 Oct 2023
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
 
