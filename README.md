@@ -45,11 +45,6 @@ print(res)
 ## Advanced Generation
 - More advanced demonstration involving code and multiple generation that would typically break ```json.loads()```
 
-- **system_prompt**: Write in whatever you want GPT to become. "You are a \<purpose in life\>"
-- **user_prompt**: The user input. Later, when we use it as a function, this is the function input
-- **output_format**: JSON format with the key as the output key, and the value as the output description
-    - The output keys will be preserved exactly, while GPT will generate content to match the description of the value as best as possible
-
 #### Example Usage
 ```python
 res = strict_text(system_prompt = 'You are a code generator, generating code to fulfil a task',
