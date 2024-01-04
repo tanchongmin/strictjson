@@ -72,8 +72,8 @@ print(res)
     - **output_format** - Dictionary containing output variables names and description for each variable. There must be at least one output variable
 - Inputs (optional):
     - **examples** - Examples in Dictionary form with the input and output variables (list if more than one)
-    - **input_type** - Dictionary containing input variable names and type of variables (need not contain all variables)
-    - **output_type** - Dictionary containing output variable names and type of variables (need not contain all variables)
+    - **input_type** - Dictionary containing input variable names and mapping function for variables (need not contain all variables)
+    - **output_type** - Dictionary containing output variable names and mapping function for variables (need not contain all variables)
     - **kwargs** - Additional arguments you would like to pass on to the ```strict_text``` function
         
         
