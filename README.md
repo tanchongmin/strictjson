@@ -1,10 +1,9 @@
 # Strict JSON v2
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
+- Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 - Updated: 4 Jan 2024
 - Created: 28 Oct 2023
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
-
-- Works for JSON outputs with ' or " or \ or { or } or unmatched braces/brackets that may break a json.loads()
 - Collaborators welcome
 
 ## How do I install this?
