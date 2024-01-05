@@ -1,11 +1,12 @@
 # Strict JSON
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
-- Optional Integration with OpenAI JSON Mode
-- Updated: 4 Jan 2024 
+- Updated: 5 Jan 2024 [New: Installable by pip, Support for OpenAI JSON Mode, Functions]
 - Created: 28 Oct 2023
-- Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
 - Collaborators welcome
+  
+- Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
+
 
 ## How do I use this? 
 1. Download package - ```pip install strictjson``` [Note: You can also import the functions directly from strictjson.py]
