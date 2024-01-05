@@ -10,13 +10,9 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 
 
 ## How do I use this? 
-1. Download package - ```pip install strictjson``` [Note: You can also import the functions directly from ```strictjson.py```]
-2. Run the following lines to include your OpenAI API Key
-```python
-import os
-os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'
-```
-Replace ```<YOUR API KEY HERE>``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
+1. Download package via command line ```pip install strictjson``` [Note: You can also import the functions directly from strictjson.py]
+2. Set up your OpenAPI API Key. Refer to ```Tutorial.ipynb``` for how to do it for Jupyter Notebooks.
+3. Import the required functions from ```strictjson``` and use them!
 
 ## How does it work?
 - Extract JSON values as a string using a special regex (add delimiters to ```key``` to make ```###key###```) to split keys and values
