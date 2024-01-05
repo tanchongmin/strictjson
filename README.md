@@ -8,9 +8,10 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 - Collaborators welcome
 
 ## How do I install this?
-1. Download entire directory and go to root folder
-2. Download python version 3.11 (https://www.python.org/downloads/) - should work for later versions as well, but this was tested on python 3.11
-3. pip install -r requirements.txt
+```cmd
+pip install strictjson
+```
+Requirements can be found on requirements.txt, which is mainly the ```openai``` package
 
 ## How do I use this? 
 1. Replace ```<YOUR API KEY HERE>``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
