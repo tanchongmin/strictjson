@@ -1,4 +1,4 @@
-# Strict JSON v2
+# Strict JSON
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 - Optional Integration with OpenAI JSON Mode
