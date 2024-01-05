@@ -10,7 +10,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 
 
 ## How do I use this? 
-1. Download package via command line ```pip install strictjson``` [Note: You can also import the functions directly from strictjson.py]
+1. Download package via command line ```pip install strictjson``` [Note: You can also import the functions directly from ```strictjson.py```]
 2. Set up your OpenAPI API Key. Refer to ```Tutorial.ipynb``` for how to do it for Jupyter Notebooks.
 3. Import the required functions from ```strictjson``` and use them!
 
