@@ -9,7 +9,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 
 
 ## How do I use this? 
-1. Download package - ```pip install strictjson``` [Note: You can also import the functions directly from strictjson.py]
+1. Download package - ```pip install strictjson``` [Note: You can also import the functions directly from ```strictjson.py```]
 2. Run the following lines to include your OpenAI API Key
 ```python
 import os
