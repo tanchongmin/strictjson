@@ -11,7 +11,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 ```cmd
 pip install strictjson
 ```
-Requirements can be found on requirements.txt, which is mainly the ```openai``` package
+Requirement dependency is the ```openai``` package and ```python>=3.11```
 
 ## How do I use this? 
 1. Replace ```<YOUR API KEY HERE>``` in ```os.environ['OPENAI_API_KEY'] = '<YOUR API KEY HERE>'``` with your own OpenAI API key (https://platform.openai.com/account/api-keys)
