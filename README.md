@@ -3,7 +3,6 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 - Updated: 5 Jan 2024 [New: Installable by pip, Support for OpenAI JSON Mode, Functions]
 - Created: 28 Oct 2023
-- Current pypi version: https://pypi.org/project/strictjson/0.0.1/
 - Collaborators welcome
   
 - Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
