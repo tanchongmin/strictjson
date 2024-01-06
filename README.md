@@ -119,7 +119,7 @@ fn(3, 4)
 #### Example Output 3
 ```{'sum': 7, 'difference': '1'}```
 
-# 4. Type specificity hints
+## Type specificity hints
 - Generally, ```strict_json``` will infer the data type automatically for you for the output fields
 - However, if you would like very specific data types, or to better enforce data types (due to long context etc.), you can just insert data type hints of the form ```type: <data_type>``` into the output field description
 - This ```<data_type>``` can be the same as Pydantic, or json schema, or simply plain text to guide the LLM
