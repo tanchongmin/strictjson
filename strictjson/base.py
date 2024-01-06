@@ -38,17 +38,27 @@ def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
         except Exception as e:
             model = 'gpt-3.5-turbo-1106'
             
+        output_format_prompt = "\nOutput in the following json format: " + str(output_format) + "\nBe as concise as possible in your output."
+            
+        my_system_prompt = str(system_prompt) + output_format_prompt
+        my_user_prompt = str(user_prompt) 
+            
         response = client.chat.completions.create(
             temperature = temperature,
             model=model,
             response_format={"type": "json_object"},
             messages=[
-                {"role": "system", "content": str(system_prompt) + "\nOutput in the following json format: "+str(output_format)},
-                {"role": "user", "content": str(user_prompt)}
+                {"role": "system", "content": my_system_prompt},
+                {"role": "user", "content": my_user_prompt}
             ],
             **kwargs
         )
         res = response.choices[0].message.content
+        
+        if verbose:
+            print('System prompt:', my_system_prompt)
+            print('\nUser prompt:', my_user_prompt)
+            print('\nGPT response:', res)
         try:
             loaded_json = json.loads(res)
         except Exception as e:
@@ -66,8 +76,12 @@ def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
             new_output_format = {}
             for key in output_format.keys():
                 new_output_format[f'{delimiter}{key}{delimiter}'] = output_format[key]
-            output_format_prompt = f'''\nYou are to output the following in json format: {new_output_format}
-    You must use "{delimiter}{{key}}{delimiter}" to enclose each {{key}} and change values based on context'''
+            output_format_prompt = f'''\nOutput in the following json format: {new_output_format}
+Output json keys exactly with {delimiter} enclosing keys and perform instructions in the json values.
+Be as concise as possible in your output.'''
+            
+            my_system_prompt = str(system_prompt) + output_format_prompt + error_msg
+            my_user_prompt = str(user_prompt) 
 
             # Use OpenAI to get a response
             client = OpenAI()
@@ -75,17 +89,20 @@ def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
               temperature = temperature,
               model=model,
               messages=[
-                {"role": "system", "content": str(system_prompt) + output_format_prompt + error_msg},
-                {"role": "user", "content": str(user_prompt)}
+                {"role": "system", "content": my_system_prompt},
+                {"role": "user", "content": my_user_prompt}
               ],
               **kwargs
             )
 
             res = response.choices[0].message.content
+            
+            # replace the double backslashes meant for content parsing
+            res = res.replace('\\n','\n').replace('\\t','\t')
 
             if verbose:
-                print('System prompt:', system_prompt + output_format_prompt + error_msg)
-                print('\nUser prompt:', str(user_prompt))
+                print('System prompt:', my_system_prompt)
+                print('\nUser prompt:', my_user_prompt)
                 print('\nGPT response:', res)
 
             # try-catch block to ensure output format is adhered to
@@ -153,6 +170,7 @@ class strict_function:
         - input_type: Dict. Dictionary containing input variable names as keys and mapping functions as values (need not contain all variables)
         - output_type: Dict. Dictionary containing output variable names as keys and mapping functions as values (need not contain all variables)
         If you do not put any of the optional fields, then we will by default do it by best fit to datatype
+        - delimiter: String. The delimiter to enclose input and output keys with
         - kwargs: Dict. Additional arguments you would like to pass on to the strict_json function
         
         ## Example

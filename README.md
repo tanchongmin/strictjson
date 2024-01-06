@@ -1,7 +1,7 @@
 # Strict JSON
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
-- Updated: 5 Jan 2024 [New: Installable by pip, Support for OpenAI JSON Mode, Functions]
+- Updated: 6 Jan 2024 [New: Installable by pip, Support for OpenAI JSON Mode, Functions]
 - Created: 28 Oct 2023
 - Collaborators welcome
   
@@ -54,11 +54,11 @@ print(res)
 ```
 
 #### Example output
-```{'Elaboration': 'To calculate the sum of an array, we can iterate through each element of the array and add it to a running total. Finally, we return the total as the result.', ```
+```{'Elaboration': 'To calculate the sum of an array, we can iterate through each element of the array and add it to a running total.', ```
 
-```'C': 'int func_sum(int p[], int size) {\\n    int sum = 0;\\n    for (int i = 0; i < size; i++) {\\n        sum += p[i];\\n    }\\n    return sum;\\n}', ```
+```'C': 'int func_sum(int p[], int size) {\n    int sum = 0;\n    for (int i = 0; i < size; i++) {\n        sum += p[i];\n    }\n    return sum;\n}', ```
 
-```'Python': 'def func_sum(p):\\n    sum = 0\\n    for num in p:\\n        sum += num\\n    return sum'}```
+```'Python': 'def func_sum(p):\n    sum = 0\n    for num in p:\n        sum += num\n    return sum'}```
 
 ## Strict JSON Functions
 - Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
@@ -119,6 +119,26 @@ fn(3, 4)
 #### Example Output 3
 ```{'sum': 7, 'difference': '1'}```
 
+# 4. Type specificity hints
+- Generally, ```strict_json``` will infer the data type automatically for you for the output fields
+- However, if you would like very specific data types, or to better enforce data types (due to long context etc.), you can just insert data type hints of the form ```type: <data_type>``` into the output field description
+- This ```<data_type>``` can be the same as Pydantic, or json schema, or simply plain text to guide the LLM
+- Note: This is not strict converstion, if you would like strict conversion, use ```input_type``` and ```output_type``` which converts the data types using rule-based functions outside of the LLM
+
+#### Example Usage
+```python
+res = strict_json(system_prompt = 'You are a classifier',
+                    user_prompt = 'It is a beautiful and sunny day',
+                    output_format = {'Sentiment': 'Type of Sentiment, type: enum["Positive", "Negative"]',
+                                    'Adjectives': 'List of adjectives, type: List[str]',
+                                    'Words': 'Number of words, type: int'})
+                                    
+print(res)
+```
+
+#### Example output
+```{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
+
 ## Integrating with OpenAI JSON Mode
 - If you want to use the OpenAI JSON Mode (which is pretty good btw), you can simply add in ```openai_json_mode = True``` in ```strict_json``` or ```strict_function```
 - Note that the model must be one of ```gpt-4-1106-preview``` or ```gpt-3.5-turbo-1106```. We will set it to ```gpt-3.5-turbo-1106``` by default if you provide an invalid model
@@ -136,7 +156,8 @@ print(res)
 ```
 
 #### Example output
-```{'Sentiment': 'positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 6}```
+```{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 6}```
+
 
 # Future Features:
 - Agents with Tool Use

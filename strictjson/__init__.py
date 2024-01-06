@@ -1,4 +1,3 @@
-from .base import strict_json
-from .base import strict_function
+from .base import *
 
 __all__ = ['strict_function', 'strict_json']
