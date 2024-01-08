@@ -75,9 +75,9 @@ def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
             # make the output format keys with a unique identifier
             new_output_format = {}
             for key in output_format.keys():
-                new_output_format[f'{delimiter}{key}{delimiter}'] = output_format[key]
+                new_output_format[f'{delimiter}{key}{delimiter}'] = '<'+output_format[key]+'>'
             output_format_prompt = f'''\nOutput in the following json format: {new_output_format}
-Output json keys exactly with {delimiter} enclosing keys and perform instructions in the json values.
+Output json keys exactly with {delimiter} enclosing keys and update text within <>.
 Be as concise as possible in your output.'''
             
             my_system_prompt = str(system_prompt) + output_format_prompt + error_msg
@@ -97,8 +97,8 @@ Be as concise as possible in your output.'''
 
             res = response.choices[0].message.content
             
-            # replace the double backslashes meant for content parsing
-            res = res.replace('\\n','\n').replace('\\t','\t')
+            # remove all escape characters so that code can be run
+            res = bytes(res, "utf-8").decode("unicode_escape")
 
             if verbose:
                 print('System prompt:', my_system_prompt)

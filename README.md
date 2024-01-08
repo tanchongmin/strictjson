@@ -1,7 +1,7 @@
 # Strict JSON
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
-- Updated: 6 Jan 2024 [New: Installable by pip, Support for OpenAI JSON Mode, Functions]
+- Updated: 8 Jan 2024 [New: Installable by pip, Support for OpenAI JSON Mode, Functions]
 - Created: 28 Oct 2023
 - Collaborators welcome
   
