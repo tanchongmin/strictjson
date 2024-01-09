@@ -5,7 +5,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 - Created: 28 Oct 2023
 - Collaborators welcome
   
-- Video tutorial: https://www.youtube.com/watch?v=IjTUKAciTCg
+- Video tutorial: [https://www.youtube.com/watch?v=IjTUKAciTCg](https://www.youtube.com/watch?v=1N-znDTlhNc)
 
 
 ## How do I use this? 
