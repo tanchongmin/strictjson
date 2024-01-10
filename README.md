@@ -6,6 +6,7 @@ A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() c
 - Collaborators welcome
   
 - Video tutorial: [https://www.youtube.com/watch?v=IjTUKAciTCg](https://www.youtube.com/watch?v=1N-znDTlhNc)
+- Discussion Channel (my discord - John's AI Group): discord.gg/bzp87AHJy5
 
 
 ## How do I use this? 
