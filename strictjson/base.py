@@ -5,6 +5,79 @@ import re
 import ast
 from openai import OpenAI
 
+# to check for datatypes
+def check_datatype(field, key, data_type, model):
+    ''' Ensures that output field of the key of JSON dictionary is of data_type 
+    Currently supports int, float, enum, lists and nested lists'''
+    data_type = data_type.strip()
+    # check for list at beginning of datatype
+    if data_type.lower()[:4] == 'list':
+        if not isinstance(field, list):
+            # if it is already in a datatype that is a list, ask LLM to fix it (1 LLM call)
+            if '[' in field and ']' in field:
+                print(f'Attempting to use LLM to fix {field} as it is not a proper list')
+                client = OpenAI()
+                response = client.chat.completions.create(
+                  temperature = 0,
+                  model=model,
+                  messages=[
+                    {"role": "system", "content": '''Output each element of the list in a new line starting with (%item) and ending with \n, e.g. ['hello', 'world'] -> (%item) hello\n(%item) world\nStart your response with (%item) and do not provide explanation'''},
+                    {"role": "user", "content": str(field)}
+                  ]
+                )
+                intermediate_response = response.choices[0].message.content
+
+                # Extract out list items
+                field = re.findall(r'\(%item\)\s*(.*?)\n*(?=\(%item\)|$)', intermediate_response, flags=re.DOTALL)
+                
+            else:
+                raise Exception(f'''Output field of {key} not of data type list []. If not possible to match, split output field into parts for elements of the list''')
+            
+    # check for nested list
+    # Regex pattern to match content inside square brackets
+    match = re.search(r"list\[(.*)\]", data_type, re.IGNORECASE)
+    if match:
+        internal_data_type = match.group(1)  # Extract the content inside the brackets
+        # do processing for internal
+        for num in range(len(field)):
+            field[num] = check_datatype(field[num], 'element of '+key, internal_data_type, model)
+            
+    # if it is not nested, check individually
+    else:
+        # check for string
+        if data_type.lower() == 'str':
+            try:
+                field = str(field)
+            except Exception as e:
+                pass
+            if not isinstance(field, str):
+                raise Exception(f"Output field of {key} not of data type {data_type}. If not possible to match, output ''")
+        # check for int
+        if data_type.lower() == 'int':
+            try:
+                field = int(field)
+            except Exception as e:
+                pass
+            if not isinstance(field, int):
+                raise Exception(f"Output field of {key} not of data type {data_type}. If not possible to match, output 0")
+        # check for float
+        if data_type.lower() == 'float':
+            try:
+                field = float(field)
+            except Exception as e:
+                pass
+            if not isinstance(field, float):
+                raise Exception(f"Output field of {key} not of data type {data_type}. If not possible to match, output 0.0")
+        # check for enum
+        if data_type[:4].lower() == 'enum':
+            try:
+                values = ast.literal_eval(data_type[4:])         
+            except:
+                raise Exception(f"Enumeration values {data_type[4:]} are not properly defined. Ensure that it is a proper list")
+            if field not in values:
+                raise Exception(f"Output field of {key} ({field}) not one of {values}. If not possible to match, output {values[0]}")
+    return field
+                
 # for functions using strict_json
 def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
                   model = 'gpt-3.5-turbo', temperature = 0, num_tries = 3, verbose = False, literal_eval = True, openai_json_mode = False, **kwargs):
@@ -26,7 +99,7 @@ def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
     - **kwargs: Dict. Additional arguments you would like to pass on to OpenAI Chat Completion API
     
     Output:
-    - res: Dict. The JSON output of the model. Returns {} if unable to output correct JSON
+    - res: Dict. The JSON output of the model. Returns {} if JSON parsing failed.
     '''
     client = OpenAI()
     
@@ -38,7 +111,7 @@ def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
         except Exception as e:
             model = 'gpt-3.5-turbo-1106'
             
-        output_format_prompt = "\nOutput in the following json format: " + str(output_format) + "\nBe as concise as possible in your output."
+        output_format_prompt = "\nOutput in the following json string format: " + str(output_format) + "\nBe concise."
             
         my_system_prompt = str(system_prompt) + output_format_prompt
         my_user_prompt = str(user_prompt) 
@@ -69,17 +142,15 @@ def strict_json(system_prompt, user_prompt, output_format, delimiter = '###',
     else:
         # start off with no error message
         error_msg = ''
+        
+        # make the output format keys with a unique identifier
+        new_output_format = {}
+        for key in output_format.keys():
+            new_output_format[f'{delimiter}{key}{delimiter}'] = '<'+str(output_format[key])+'>'
+        output_format_prompt = f'''\nOutput in the following json string format: {new_output_format}
+You must update text within <>. Be concise.'''
 
         for i in range(num_tries):
-
-            # make the output format keys with a unique identifier
-            new_output_format = {}
-            for key in output_format.keys():
-                new_output_format[f'{delimiter}{key}{delimiter}'] = '<'+output_format[key]+'>'
-            output_format_prompt = f'''\nOutput in the following json format: {new_output_format}
-Output json keys exactly with {delimiter} enclosing keys and update text within <>.
-Be as concise as possible in your output.'''
-            
             my_system_prompt = str(system_prompt) + output_format_prompt + error_msg
             my_user_prompt = str(user_prompt) 
 
@@ -110,7 +181,14 @@ Be as concise as possible in your output.'''
                 # check key appears for each element in the output
                 for key in new_output_format.keys():
                     # if output field missing, raise an error
-                    if key not in res: raise Exception(f"{key} not in json output")
+                    if key not in res: 
+                        # try to fix it if possible
+                        if res.count(f"'{key}':") == 1:
+                            res = res.replace(f"'{key}':", f"'{delimiter}{key}{delimiter}':")
+                        elif res.count(f'"{key}"') == 1:
+                            res = res.replace(f'"{key}":', f'"{delimiter}{key}{delimiter}":')
+                        else:
+                            raise Exception(f"{key} not in json output. You must use \"{delimiter}{{key}}{delimiter}\" to enclose the {{key}}.")
 
                 # if all is good, we then extract out the fields
                 # Use regular expressions to extract keys and values
@@ -131,18 +209,26 @@ Be as concise as possible in your output.'''
 
                 # try to do some parsing via literal_eval
                 if literal_eval:
-                    res = end_dict
                     for key in end_dict.keys():
                         try:
                             end_dict[key] = ast.literal_eval(end_dict[key])
                         except Exception as e:
                             # if there is an error in literal processing, do nothing as it is not of the form of a literal
                             continue 
+                   
+                # check for data types
+                for key in end_dict.keys():
+                    # check for data type if any
+                    if key in output_format and 'type:' in output_format[key]:
+                        # extract out data type
+                        data_type = output_format[key].split('type:')[-1]
+                        # check the data type, perform type conversion as necessary
+                        end_dict[key] = check_datatype(end_dict[key], key, data_type, model)       
 
                 return end_dict
 
             except Exception as e:
-                error_msg = f"\n\nResult: {res}\n\nError message: {str(e)}\nYou must use \"{delimiter}{{key}}{delimiter}\" to enclose the each {{key}}."
+                error_msg = f"\n\nPrevious json: {res}\njson error: {str(e)}\nFix the error."
                 print("An exception occurred:", str(e))
                 print("Current invalid json format:", res)
 
@@ -152,9 +238,8 @@ Be as concise as possible in your output.'''
 class strict_function:
     def __init__(self, fn_description = 'Output a reminder to define this function in a happy way', 
                  output_format = {'output': 'sentence'}, 
+                 variable_names = [],
                  examples = None,
-                 input_type = None, 
-                 output_type = None,
                  **kwargs):
         ''' 
         Creates an LLM-based function using fn_description and outputs JSON based on output_format. 
@@ -166,25 +251,16 @@ class strict_function:
         - output_format: String. Dictionary containing output variables names and description for each variable. There must be at least one output variable
            
         Inputs (optional):
+        - **variable_names** - How the variables should be named in a list
         - examples: Dict or List[Dict]. Examples in Dictionary form with the input and output variables (list if more than one)
-        - input_type: Dict. Dictionary containing input variable names as keys and mapping functions as values (need not contain all variables)
-        - output_type: Dict. Dictionary containing output variable names as keys and mapping functions as values (need not contain all variables)
-        If you do not put any of the optional fields, then we will by default do it by best fit to datatype
         - delimiter: String. The delimiter to enclose input and output keys with
         - kwargs: Dict. Additional arguments you would like to pass on to the strict_json function
         
         ## Example
-        fn_description = 'Output the sum of var1 and var2'
+        fn_description = 'Output the sum of num1 and num2'
         output_format = {'output': 'sum of two numbers'}
-        examples = [{'var1': 5, 'var2': 6, 'output': 11}, {'var1': 2, 'var2': 4, 'output': 6}]
-        input_type = {'var1': int, 'var2': int}
-        output_type = {'output': int}
-        
-        ## Advanced Conversion of list-based outputs
-        - If your output field is of the form of a list, you can ensure strict type conversion of each element using a lambda function
-        - Examples
-            - For strings, lambda x: [str(y) for y in x]
-            - For integers, lambda x: [int(y) for y in x]
+        variable_names = ['num1', 'num2']
+        examples = [{'num1': 5, 'num2': 6, 'output': 11}, {'num1': 2, 'num2': 4, 'output': 6}]
         '''
         
         # Compulsary variables
@@ -192,8 +268,7 @@ class strict_function:
         self.output_format = output_format
         
         # Optional variables
-        self.input_type = input_type
-        self.output_type = output_type
+        self.variable_names = variable_names
         self.examples = examples
         self.kwargs = kwargs
         
@@ -213,28 +288,15 @@ class strict_function:
         
         # Do the merging of args and kwargs
         for num, arg in enumerate(args):
-            kwargs['var'+str(num+1)] = arg
-        
-        # Do the input type converstion (optional)
-        if self.input_type is not None:
-            for key in kwargs:
-                if key in self.input_type:
-                    try:
-                        kwargs[key] = self.input_type[key](kwargs[key])
-                    except Exception as e: continue
+            if len(self.variable_names) > num:
+                kwargs[self.variable_names[num]] = arg
+            else:
+                kwargs['var'+str(num+1)] = arg
 
         # do the function. 
         res = strict_json(system_prompt = self.fn_description,
                         user_prompt = kwargs,
                         output_format = self.output_format, 
                         **self.kwargs)
-    
-        # Do the output type conversion (optional)
-        if self.output_type is not None:
-            for key in res:
-                if key in self.output_type:
-                    try:
-                        res[key] = self.output_type[key](res[key])      
-                    except Exception as e: continue
                 
         return res

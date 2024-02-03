@@ -1,7 +1,14 @@
 # Strict JSON
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
-- Updated: 8 Jan 2024 [New: Installable by pip, Support for OpenAI JSON Mode, Functions]
+- Updated 4 Feb 2024 (v2.1.0)
+    - Removed `input_type` and `output_type` from `strict_function`. Reason: `input_type` not needed as LLMs can flexibly perceive inputs, `output_type` is now handled within the type hints. 
+    - Now supports `int`, `float`, `str`, `list`, `List[int]`, `List[str]`, `List[float]`,  `Enum[]`, `List[Enum[]]` type forcing with LLM-based error correction
+    - Better handling of naming of variables in `strict_function` by using list of variables using `variable_names`
+       
+
+Previous Versions
+- 8 Jan 2024 (v2.0.2) [New: Installable by pip, Support for OpenAI JSON Mode, Functions] 
 - Created: 28 Oct 2023
 - Collaborators welcome
   
@@ -62,14 +69,14 @@ print(res)
 ```'Python': 'def func_sum(p):\n    sum = 0\n    for num in p:\n        sum += num\n    return sum'}```
 
 ## Strict JSON Functions
+# 3. Strict JSON Functions
 - Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
 - Inputs (compulsory):
     - **fn_description** - Function description to describe process of transforming input variables to output variables
     - **output_format** - Dictionary containing output variables names and description for each variable. There must be at least one output variable
 - Inputs (optional):
     - **examples** - Examples in Dictionary form with the input and output variables (list if more than one)
-    - **input_type** - Dictionary containing input variable names as keys and mapping functions as values (need not contain all variables)
-    - **output_type** - Dictionary containing output variable names as keys and mapping functions as values (need not contain all variables)
+    - **variable_names** - How the variables should be named in a list
     - **kwargs** - Additional arguments you would like to pass on to the ```strict_json``` function
         
 - Outputs:
@@ -104,33 +111,36 @@ fn(2, 10)
 #### Example Output 2
 ```{'output': 20}```
 
-#### Example Usage 3 (Description, Examples and Type Forcing)
+#### Example Usage 3 (Description and Variable Names and Examples)
 ```python
-# Construct the function: var1 will be first input variable, var2 will be second input variable and so on
-fn = strict_function(fn_description = 'Output the sum and difference of var1 and var2', 
-                 output_format = {'sum': 'sum of two numbers', 'difference': 'absolute difference of two numbers'}, 
-                 examples = {'var1': 2, 'var2': 4, 'sum': 6, 'difference': '2'}, 
-                 input_type = {'var1': int, 'var2': int},           # optional
-                 output_type = {'sum': int, 'difference': str})     # optional
+# Construct the function: description and examples with variable names
+# variable names will be referenced in order of input
+fn = strict_function(fn_description = 'Output the sum and difference of num1 and num2', 
+                 output_format = {'sum': 'sum of two numbers', 
+                                  'difference': 'absolute difference of two numbers'}, 
+                 variable_names = ['num1', 'num2'],
+                 examples = {'num1': 2, 'num2': 4, 'sum': 6, 'difference': 2})
 
 # Use the function
 fn(3, 4)
 ```
 
 #### Example Output 3
-```{'sum': 7, 'difference': '1'}```
+```{'sum': 7, 'difference': 1}```
 
-## Type specificity hints
+## Type forcing
 - Generally, ```strict_json``` will infer the data type automatically for you for the output fields
 - However, if you would like very specific data types, or to better enforce data types (due to long context etc.), you can just insert data type hints of the form ```type: <data_type>``` into the output field description
-- This ```<data_type>``` can be the same as Pydantic, or json schema, or simply plain text to guide the LLM
-- Note: This is not strict converstion, if you would like strict conversion, use ```input_type``` and ```output_type``` which converts the data types using rule-based functions outside of the LLM
+- ```<data_type>``` must be of the form ```int, float, str, Enum[], list, List[str], List[int], List[float], List[Enum[]]```
+- The `Enum` and `List` are not case sensitive, so `enum` and `list` works just as well
+- If `list` or `List[]` is not formatted correctly in LLM's output, we will correct it by asking the LLM to list out the elements line by line
+- Other types will first be forced by rule-based conversion, any further errors will be fed into LLM's error feedback mechanism
 
 #### Example Usage
 ```python
 res = strict_json(system_prompt = 'You are a classifier',
                     user_prompt = 'It is a beautiful and sunny day',
-                    output_format = {'Sentiment': 'Type of Sentiment, type: enum["Positive", "Negative"]',
+                    output_format = {'Sentiment': 'Type of Sentiment, type: Enum["Positive", "Negative"]',
                                     'Adjectives': 'List of adjectives, type: List[str]',
                                     'Words': 'Number of words, type: int'})
                                     
