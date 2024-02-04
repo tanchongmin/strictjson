@@ -1,0 +1,10 @@
+5 Feb 2024 (v2.2.0)
+- HUGE: Nested output formats of multiple lists and dictionaries are now supported!
+- Now supports int, float, str, dict, list, Dict[], List[], Enum[] type forcing with LLM-based error correction
+- Better handling of naming of variables in strict_function by using list of variables using variable_names
+- Removed input_type and output_type from strict_function. Reason: input_type not needed as LLMs can flexibly perceive inputs, output_type is now handled with type forcing
+
+8 Jan 2024 (v2.0.2)
+- Installable by pip
+- Support for OpenAI JSON Mode
+- StrictJSON Functions

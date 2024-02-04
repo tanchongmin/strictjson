@@ -1,12 +1,12 @@
 # Strict JSON
 A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
-- Updated 4 Feb 2024 (v2.1.0)
-    - Removed `input_type` and `output_type` from `strict_function`. Reason: `input_type` not needed as LLMs can flexibly perceive inputs, `output_type` is now handled within the type hints. 
-    - Now supports `int`, `float`, `str`, `list`, `List[int]`, `List[str]`, `List[float]`,  `Enum[]`, `List[Enum[]]` type forcing with LLM-based error correction
+- Updated 5 Feb 2024 (v2.2.0)
+    - HUGE: Nested output formats of multiple lists and dictionaries are now supported!
+    - Now supports `int`, `float`, `str`, `dict`, `list`, `Dict[]`, `List[]`, `Enum[]` type forcing with LLM-based error correction
     - Better handling of naming of variables in `strict_function` by using list of variables using `variable_names`
+    - Removed `input_type` and `output_type` from `strict_function`. Reason: `input_type` not needed as LLMs can flexibly perceive inputs, `output_type` is now handled with type forcing
        
-
 Previous Versions
 - 8 Jan 2024 (v2.0.2) [New: Installable by pip, Support for OpenAI JSON Mode, Functions] 
 - Created: 28 Oct 2023
@@ -22,9 +22,9 @@ Previous Versions
 3. Import the required functions from ```strictjson``` and use them!
 
 ## How does it work?
-- Extract JSON values as a string using a special regex (add delimiters to ```key``` to make ```###key###```) to split keys and values
-- By default, uses ```ast.literal_eval``` to best match the string to a literal (e.g. int, string, dict). Set ```literal_eval = False``` when calling ```strict_json``` to preserve output fields as string
-- Ensures that all JSON fields are output by LLM, if not it will feed in error message to LLM to iteratively correct its generation (default: 3 tries)
+- Extract JSON values as a string using a special regex (add delimiters to ```key``` to make ```###key###```) to split keys and values. (New!) Also works for nested datatypes by splitting recursively.
+- Uses ```ast.literal_eval``` to best match the extracted output value to a literal (e.g. int, string, dict).
+- Ensures that all JSON fields are output by LLM, with optional type checking, if not it will feed in error message to LLM to iteratively correct its generation (default: 3 tries)
 
 # Features:
 ## Basic Generation
@@ -68,8 +68,52 @@ print(res)
 
 ```'Python': 'def func_sum(p):\n    sum = 0\n    for num in p:\n        sum += num\n    return sum'}```
 
+## Type forcing
+- Generally, ```strict_json``` will infer the data type automatically for you for the output fields
+- However, if you would like very specific data types, you can do data forcing using ```type: <data_type>``` at the last part of the output field description
+- ```<data_type>``` must be of the form `int`, `float`, `str`, `dict`, `list`, `Dict[]`, `List[]`, `Enum[]`
+- The `Enum` and `List` are not case sensitive, so `enum` and `list` works just as well
+- For `Enum[list_of_category_names]`, it is best to give an "Other" category in case the LLM fails to classify correctly with the other options.
+- If `list` or `List[]` is not formatted correctly in LLM's output, we will correct it by asking the LLM to list out the elements line by line
+- For `dict`,  we can further check whether keys are present using `Dict[list_of_key_names]`
+- Other types will first be forced by rule-based conversion, any further errors will be fed into LLM's error feedback mechanism
+- If `<data_type>` is not the specified data types, it can still be useful to shape the output for the LLM. However, no type checking will be done.
+
+#### Example Usage 1
+```python
+res = strict_json(system_prompt = 'You are a classifier',
+                    user_prompt = 'It is a beautiful and sunny day',
+                    output_format = {'Sentiment': 'Type of Sentiment, type: Enum["Pos", "Neg", "Other"]',
+                                    'Adjectives': 'List of adjectives, type: List[str]',
+                                    'Words': 'Number of words, type: int'})
+                                    
+print(res)
+```
+
+#### Example output 1
+```{'Sentiment': 'Pos', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
+
+#### Example Usage 2
+```python
+res = strict_json(system_prompt = 'You are an expert at organising birthday parties',
+                    user_prompt = 'Give me some information on how to organise a birthday',
+                    output_format = {'Key steps for organising birthdays': 'list of 3 steps, type: list',
+                                    'Lucky draw numbers': '3 numbers from 1-50, type: List[int]',
+                                    'Sample venues': 'Describe two venues, type: List[Dict["Venue", "Description", "Cost"]]'})
+
+print(res)
+```
+
+#### Example output 2
+```{'Key steps for organising birthdays': ['1. Determine the budget and guest list', '2. Choose a theme and plan the decorations', '3. Arrange for food, drinks, and entertainment'],```
+
+```'Lucky draw numbers': [10, 25, 42], ```
+
+```'Sample venues': [{'Venue': 'Local park', 'Description': 'Outdoor space with picnic tables and playground', 'Cost': 'Free'},```
+
+```{'Venue': 'Party venue', 'Description': 'Indoor space with party rooms and entertainment options', 'Cost': 'Varies depending on package'}]}```
+
 ## Strict JSON Functions
-# 3. Strict JSON Functions
 - Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
 - Inputs (compulsory):
     - **fn_description** - Function description to describe process of transforming input variables to output variables
@@ -127,28 +171,6 @@ fn(3, 4)
 
 #### Example Output 3
 ```{'sum': 7, 'difference': 1}```
-
-## Type forcing
-- Generally, ```strict_json``` will infer the data type automatically for you for the output fields
-- However, if you would like very specific data types, or to better enforce data types (due to long context etc.), you can just insert data type hints of the form ```type: <data_type>``` into the output field description
-- ```<data_type>``` must be of the form ```int, float, str, Enum[], list, List[str], List[int], List[float], List[Enum[]]```
-- The `Enum` and `List` are not case sensitive, so `enum` and `list` works just as well
-- If `list` or `List[]` is not formatted correctly in LLM's output, we will correct it by asking the LLM to list out the elements line by line
-- Other types will first be forced by rule-based conversion, any further errors will be fed into LLM's error feedback mechanism
-
-#### Example Usage
-```python
-res = strict_json(system_prompt = 'You are a classifier',
-                    user_prompt = 'It is a beautiful and sunny day',
-                    output_format = {'Sentiment': 'Type of Sentiment, type: Enum["Positive", "Negative"]',
-                                    'Adjectives': 'List of adjectives, type: List[str]',
-                                    'Words': 'Number of words, type: int'})
-                                    
-print(res)
-```
-
-#### Example output
-```{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
 
 ## Integrating with OpenAI JSON Mode
 - If you want to use the OpenAI JSON Mode (which is pretty good btw), you can simply add in ```openai_json_mode = True``` in ```strict_json``` or ```strict_function```
