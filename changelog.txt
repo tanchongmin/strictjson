@@ -1,3 +1,7 @@
+8 Feb 2024 (v2.2.1)
+- Added in LLM-based checks by using type: ensure <requirement> in output field
+- Added in custom_checks and check_data in strict_json for user to implement their own custom check functions
+
 5 Feb 2024 (v2.2.0)
 - HUGE: Nested output formats of multiple lists and dictionaries are now supported!
 - Now supports int, float, str, dict, list, Dict[], List[], Enum[] type forcing with LLM-based error correction
