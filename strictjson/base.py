@@ -59,7 +59,7 @@ Output in the following format:
 ```
 # Thoughts: <Thoughts about whether output field meets requirement>
 # Requirement Met: <Yes or No>
-# Action Needed: <State in one sentence how to meet requirement. If requirement already met, output NA>"
+# Action Needed: <If Requirement Met is No, state in one sentence how to meet requirement. Otherwise, output NA>"
 ```
 Update text enclosed in <>. Be concise.
 '''
@@ -75,7 +75,7 @@ Update text enclosed in <>. Be concise.
             requirement_met = True
         else:
             requirement_met = False
-        print("Thoughts:", thoughts)
+        # print("Thoughts:", thoughts)
         print("Requirement Met:", requirement_met)
         if not requirement_met:
             print("Action Needed:", action_needed)
@@ -99,7 +99,7 @@ def check_datatype(field, key: dict, data_type: str, **kwargs):
     # check if we want an LLM-based correction
     if data_type.lower()[:6] == 'ensure':
         llm_check_msg = data_type[6:].strip()
-        print(f'Using LLM to check {field} to see if it adheres to {llm_check_msg}')
+        print(f'Using LLM to check "{field}" to see if it adheres to "{llm_check_msg}"')
         requirement_met, action_needed = llm_check(field, llm_check_msg, **kwargs)
         # if check failed, raise error
         if not requirement_met:
@@ -275,7 +275,7 @@ def wrap_with_angle_brackets(d: dict, delimiter: str, delimiter_num: int) -> dic
     else:
         return d
     
-def chat(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5-turbo', temperature: float = 0, verbose: bool = False, host: str = 'openai', **kwargs):
+def chat(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5-turbo', temperature: float = 0, verbose: bool = False, host: str = 'openai', llm = None, **kwargs):
     '''Performs a chat with the host's LLM model with system prompt, user prompt, model, verbose and kwargs
     Returns the output string res
     - system_prompt: String. Write in whatever you want the LLM to become. e.g. "You are a \<purpose in life\>"
@@ -283,11 +283,22 @@ def chat(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5-turbo', tem
     - model: String. The LLM model to use for json generation
     - verbose: Boolean (default: False). Whether or not to print out the system prompt, user prompt, GPT response
     - host: String. The provider of the LLM
+    - llm: User-made llm function.
+        - Inputs:
+            - system_prompt: String. Write in whatever you want the LLM to become. e.g. "You are a \<purpose in life\>"
+            - user_prompt: String. The user input. Later, when we use it as a function, this is the function input
+        - Output:
+            - res: String. The response of the LLM call
     - **kwargs: Dict. Additional arguments for LLM chat
     
     TODO: Incorporate other open-sourced LLMs in the future'''
+    if llm is not None:
+        ''' If you specified your own LLM, then we just feed in the system and user prompt 
+        LLM function should take in system prompt (str) and user prompt (str), and output a response (str) '''
+        res = llm(system_prompt = system_prompt, user_prompt = user_prompt)
     
-    if host == 'openai':
+    ## This part here is for llms that are OpenAI based
+    elif host == 'openai':
         # additional checks for openai json mode
         if 'response_format' in kwargs and kwargs['response_format'] == {"type": "json_object"}:
             # if model fails, default to gpt-3.5-turbo-1106
@@ -308,10 +319,10 @@ def chat(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5-turbo', tem
         )
         res = response.choices[0].message.content
 
-        if verbose:
-            print('System prompt:', system_prompt)
-            print('\nUser prompt:', user_prompt)
-            print('\nGPT response:', res)
+    if verbose:
+        print('System prompt:', system_prompt)
+        print('\nUser prompt:', user_prompt)
+        print('\nGPT response:', res)
             
     return res
 
@@ -399,8 +410,8 @@ Update text enclosed in <>. Be concise. Output only the json string without any 
                 print("Current invalid json format:", res)
 
         return {}
-    
-class strict_function:
+
+class Function:
     def __init__(self, fn_description: str = 'Output a reminder to define this function in a happy way', 
                  output_format: dict = {'output': 'sentence'}, 
                  variable_names: list = [],
@@ -470,3 +481,11 @@ class strict_function:
                         **self.kwargs, **strict_json_kwargs)
                 
         return res
+    
+### Legacy Support ###
+# alternative names for strict_json
+strict_text = strict_json
+strict_output = strict_json
+
+# alternative name for strict_function (it is now called Function)
+strict_function = Function

@@ -1,3 +1,8 @@
+9 Feb 2024 (v2.2.2)
+- Exposed the LLM variable so user can use any llm they want
+- changed `strict_function` naming to `Function` to match convention of class names being capitalised (`strict_function` still works for legacy support.)
+- added legacy support for `strict_text` and `strict_output`, which were the earlier function names of the current `strict_json`
+
 8 Feb 2024 (v2.2.1)
 - Added in LLM-based checks by using type: ensure <requirement> in output field
 - Added in custom_checks and check_data in strict_json for user to implement their own custom check functions

@@ -2,11 +2,23 @@
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 
-### Functionalities (v2.2.1) 8 Feb 2024:
+### Main Functionalities (v2.2.2) 9 Feb 2024 (see Tutorial.ipynb)
 - Ensures LLM outputs into a dictionary based on a JSON format (HUGE: Nested lists and dictionaries now supported)
 - Supports `int`, `float`, `str`, `dict`, `list`, `Dict[]`, `List[]`, `Enum[]` type forcing with LLM-based error correction, as well as LLM-based error correction using `type: ensure <restriction>`, and (advanced) custom user checks using `custom_checks`
-- Easy construction of LLM-based functions using ```strict_function```
+- Easy construction of LLM-based functions using ```Function``` (Note: renamed from `strict_function` to keep in line with naming convention of capitalised class groups. `strict_function` still works for legacy support.)
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
+- Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
+
+### Agent Functionalities (coming soon!)
+- Agents with registered functions as skills
+- Multiple agents can choose who they want to interact with in a sequential manner (Multi-hop Chain-of-Thought)
+- Retrieval Augmented Generation (RAG) - based selection of functions (to be added)
+- RAG-based selection of memory of few-shot examples of how to use functions and how to perform task based on similar tasks done in the past (to be added)
+
+### Benefits of JSON messaging over agentic frameworks using conversational free-text like AutoGen
+- JSON format helps do Chain-of-Thought prompting naturally and is less verbose than free text
+- JSON format allows natural parsing of multiple output fields by agents
+- StrictJSON helps to ensure all output fields are there and of the right format required for downstream processing
 
 ### Tutorials and Community Support
 - Created: 28 Oct 2023
@@ -43,7 +55,7 @@ res = strict_json(system_prompt = 'You are a classifier',
 print(res)
 ```
 
-#### Example output
+#### Example Output
 ```{'Sentiment': 'positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
 
 ## 2. Advanced Generation
@@ -60,7 +72,7 @@ res = strict_json(system_prompt = 'You are a code generator, generating code to 
 print(res)
 ```
 
-#### Example output
+#### Example Output
 ```{'Elaboration': 'To calculate the sum of an array, we can iterate through each element of the array and add it to a running total.', ```
 
 ```'C': 'int func_sum(int p[], int size) {\n    int sum = 0;\n    for (int i = 0; i < size; i++) {\n        sum += p[i];\n    }\n    return sum;\n}', ```
@@ -93,7 +105,7 @@ res = strict_json(system_prompt = 'You are a classifier',
 print(res)
 ```
 
-#### Example output 1
+#### Example Output 1
 ```{'Sentiment': 'Pos', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
 
 #### Example Usage 2
@@ -107,7 +119,9 @@ res = strict_json(system_prompt = 'You are an expert at organising birthday part
 print(res)
 ```
 
-#### Example output 2
+#### Example Output 2
+`Using LLM to check "The secret of staying young is to live honestly, eat slowly, and lie about your age. - Lucille Ball" to see if it adheres to "quote contains the word age" Requirement Met: True`
+
 ```{'Famous Quote': 'The secret of staying young is to live honestly, eat slowly, and lie about your age. - Lucille Ball',```
 ```'Lucky draw numbers': [7, 21, 35],```
 
@@ -130,7 +144,7 @@ print(res)
 #### Example Usage 1 (Description only)
 ```python
 # Construct the function: var1 will be first input variable, var2 will be second input variable and so on
-fn = strict_function(fn_description = 'Output a sentence with words <var1> and <var2> in the style of <var3>', 
+fn = Function(fn_description = 'Output a sentence with words <var1> and <var2> in the style of <var3>', 
                      output_format = {'output': 'sentence'})
 
 # Use the function
@@ -143,7 +157,7 @@ fn('ball', 'dog', 'happy')
 #### Example Usage 2 (Examples only)
 ```python
 # Construct the function: infer pattern from just examples without description (here it is multiplication)
-fn = strict_function(fn_description = 'Map input to output based on examples', 
+fn = Function(fn_description = 'Map input to output based on examples', 
                      output_format = {'output': 'final answer'}, 
                      examples = [{'var1': 3, 'var2': 2, 'output': 6}, 
                                  {'var1': 5, 'var2': 3, 'output': 15}, 
@@ -160,7 +174,7 @@ fn(2, 10)
 ```python
 # Construct the function: description and examples with variable names
 # variable names will be referenced in order of input
-fn = strict_function(fn_description = 'Output the sum and difference of <num1> and <num2>', 
+fn = Function(fn_description = 'Output the sum and difference of <num1> and <num2>', 
                  output_format = {'sum': 'sum of two numbers', 
                                   'difference': 'absolute difference of two numbers'}, 
                  variable_names = ['num1', 'num2'],
@@ -173,9 +187,55 @@ fn(3, 4)
 #### Example Output 3
 ```{'sum': 7, 'difference': 1}```
 
-## 5. Integrating with OpenAI JSON Mode
-- If you want to use the OpenAI JSON Mode (which is pretty good btw), you can simply add in ```openai_json_mode = True``` in ```strict_json``` or ```strict_function```
+# 5. Integrating with your own LLM
+- StrictJSON has native support for OpenAI LLMs (you can put the LLM API parameters inside `strict_json` or `Function` directly)
+- If your LLM is not from OpenAI, it is really easy to integrate with your own LLM
+- Simply pass your custom LLM function inside the `llm` parameter of `strict_json` or `Function`
+    - Inputs:
+        - system_prompt: String. Write in whatever you want the LLM to become. e.g. "You are a \<purpose in life\>"
+        - user_prompt: String. The user input. Later, when we use it as a function, this is the function input
+    - Output:
+        - res: String. The response of the LLM call
+
+#### Example Custom LLM
+```python
+def llm(system_prompt: str, user_prompt: str):
+    ''' Here, we use OpenAI for illustration, you can change it to your own LLM '''
+    # ensure your LLM imports are all within this function
+    from openai import OpenAI
+    
+    # define your own LLM here
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model='gpt-3.5-turbo',
+        temperature = 0,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    )
+    return response.choices[0].message.content
+```
+
+#### Example Usage with `strict_json`
+```python
+res = strict_json(system_prompt = 'You are a classifier',
+                    user_prompt = 'It is a beautiful and sunny day',
+                    output_format = {'Sentiment': 'Type of Sentiment',
+                                    'Adjectives': 'List of adjectives',
+                                    'Words': 'Number of words'},
+                                     llm = llm) # set this to your own LLM
+
+print(res)
+```
+
+#### Example Output
+```{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
+
+## 6. Integrating with OpenAI JSON Mode
+- If you want to use the OpenAI JSON Mode (which is pretty good btw), you can simply add in ```openai_json_mode = True``` in ```strict_json``` or ```Function```
 - Note that the model must be one of ```gpt-4-1106-preview``` or ```gpt-3.5-turbo-1106```. We will set it to ```gpt-3.5-turbo-1106``` by default if you provide an invalid model
+- Note that type checking does not work with OpenAI JSON Mode
 
 #### Example Usage
 ```python
@@ -189,99 +249,8 @@ res = strict_json(system_prompt = 'You are a classifier',
 print(res)
 ```
 
-#### Example output
+#### Example Output
 ```{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 6}```
-
-## 6. Additional Output Field Checks (Advanced)
-
-- You can also specify your own custom check function that will be used to check the output field (which will be in `str`, `int`, `float`, `list` or `dict` format inferred by LLM or specified in `type: <data type>`)
-- Ensure that what you are checking for is implied in the output field's description in `output_format` of `strict_json` or `strict_function`
-- Your custom check function must take in: `output_field`
-- Your custom check function must output: 
-    - `requirement` (str): The requirement you are checking for
-    - `requirement_met` (bool): Whether condition is met, True or False
-    - `action_needed` (str): What needs to be done to meet requirement if requirement_met is False
-- If `requirement_met` is False, the `action_needed` message will be used for the `strict_json` error correcting mechanism. Otherwise, the error correcting mechanism will not be triggered
-- `action_needed` is used to tell the LLM what it needs to do to meet your requirements (LLM is not able to self-correct without guidance for most cases). Try to be as specific as possible to improve error correction success rate.
-- Pass in your custom check function inside `custom_checks` variable of `strict_json` or `strict_function` under the same key as that in `output_format`
-- You can add multiple check functions for one variable by putting it inside the same list
-- Example custom check function named `hello_world_check` which checks for the presence of hello world
-- You can also use information in the variable `check_data` for checks (input via `strict_json` or `strict_function`)
-
-#### Example Custom Check Functions
-```python
-def hello_world_check(output_field, check_data) -> (str, bool, str):
-    ''' Example function 1: Checks whether hello world is present in output_field. '''
-    requirement = 'Check whether hello world is present in output field'
-    requirement_met = True
-    action_needed = ''
-    # do a check for requirement of having 'hello'
-    if 'hello' not in str(output_field):
-        requirement_met = False
-        action_needed += 'Add in the word hello into output field, '
-    if 'world' not in str(output_field):
-        requirement_met = False
-        action_needed += 'Add in the word world into output field, '
-    return (requirement, requirement_met, action_needed)
-```
-
-```python
-def function_name_check(output_field, check_data) -> (str, bool, str):
-    ''' Example function 2: Checks whether function name is present in output_field
-    Uses additional information from the check_data variable of strict_json'''
-    function_name = check_data['Function name']
-    requirement = f'Check whether {function_name} is present in output field'
-    requirement_met = True
-    action_needed = ''
-    
-    # do a check for requirement of having 'myprint'
-    if function_name not in str(output_field):
-        requirement_met = False
-        action_needed += f'Ensure that function name "{function_name}" is used, '
-    return (requirement, requirement_met, action_needed)
-```
-
-#### Example Usage 1 (in strict_json)
-```python
-# we can input our custom_checks as a list of check functions, and check_data is the additional information for these check functions
-res = strict_json(system_prompt = 'You are a code generator',
-                    user_prompt = 'Print out hello world',
-                    output_format = {'Thoughts': 'How to do it',
-                                    'Python Code': 'Function beginning with def myprint() -> str:'},
-                    custom_checks = {'Python Code': [hello_world_check, function_name_check]},
-                    check_data = {'Function name:' 'myprint'})
-                                    
-print(res)
-```
-#### Example Output 1
-`Running check for "Check whether hello world is present in output field" on output field of "Python Code"
-Requirement met`
-
-
-`Running check for "Check whether myprint is present in output field" on output field of "Python Code"
-Requirement met`
-
-
-`{'Thoughts': 'To print out "hello world", use the print() function in Python.',`
-`'Python Code': 'def myprint() -> str:\n    return "hello world"'}`
-
-#### Example Usage 2 (in strict_function)
-
-```python
-fn = strict_function(fn_description = 'Output code to print hello world in a function named <var1>', 
-                     output_format = {'Python code': 'Python function named <var1> to print hello world'},
-                     custom_checks = {'Python code': [function_name_check]})
-
-# in runtime of function, we can input what we would want to check in check_data if we are not sure what it will be beforehand
-fn('hello world', 'myprint', check_data = {'Function name': 'myprint'})
-```
-
-#### Example Output 2
-
-`Running check for "Check whether myprint is present in output field" on output field of "Python code"
-Requirement met`
-
-`{'Python code': 'def myprint():\n    print("hello world")'}`
 
 # Future Features:
 - Agents with Tool Use
