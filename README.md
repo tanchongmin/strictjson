@@ -275,7 +275,3 @@ print(res)
 
 #### Example Output
 ```{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 6}```
-
-# Future Features:
-- Agents with Tool Use
-- Conversational Agents
