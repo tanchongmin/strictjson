@@ -1,4 +1,4 @@
-# Strict JSON
+# Strict JSON v3.0.1
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 
