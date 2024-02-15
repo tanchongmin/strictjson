@@ -145,7 +145,7 @@ def check_datatype(field, key: dict, data_type: str, **kwargs):
                 pass
             if not isinstance(field, int):
                 raise Exception(f'Output field of "{key}" not of data type {data_type}. If not possible to match, output 0')
-                
+        
         # check for float
         if data_type.lower() == 'float':
             try:
@@ -155,6 +155,16 @@ def check_datatype(field, key: dict, data_type: str, **kwargs):
             if not isinstance(field, float):
                 raise Exception(f'Output field of "{key}" not of data type {data_type}. If not possible to match, output 0.0')
                 
+        # check for bool
+        if data_type.lower() == 'bool':
+            field = str(field)
+            if field[:4].lower() == 'true':
+                field = True
+            elif field[:5].lower() == 'false':
+                field = False
+            else:
+                raise Exception(f'Output field of "{key}" not of data type {data_type}. If not possible to match, output True')
+
         # check for dict
         if data_type[:4].lower() == 'dict':
             if not isinstance(field, dict):
@@ -412,30 +422,32 @@ Update text enclosed in <>. Be concise. Output only the json string without any 
         return {}
 
 class Function:
-    def __init__(self, fn_description: str = 'Output a reminder to define this function in a happy way', 
-                 output_format: dict = {'output': 'sentence'}, 
-                 variable_names: list = [],
+    def __init__(self,
+                 fn_description: str = 'Output a reminder to define this function in a happy way', 
+                 output_format: dict = {'output': 'sentence'},
                  examples = None,
+                 external_fn = None,
+                 fn_name = None,
                  **kwargs):
         ''' 
-        Creates an LLM-based function using fn_description and outputs JSON based on output_format. 
-        Optionally, can define the function based on examples (list of Dict containing input and output variables for each example)
-        Optionally, can also force input/output variables to a particular type with input_type and output_type dictionary respectively.
+        Creates an LLM-based function or wraps an external function using fn_description and outputs JSON based on output_format. 
+        (Optional) Can define the function based on examples (list of Dict containing input and output variables for each example)
+        (Optional) If you would like greater specificity in your function's input, you can describe the variable after the : in the input variable name, e.g. `<var1: an integer from 10 to 30`. Here, `var1` is the input variable and `an integer from 10 to 30` is the description.
         
         Inputs (compulsory):
-        - fn_description: String. Function description to describe process of transforming input variables to output variables
-        - output_format: String. Dictionary containing output variables names and description for each variable. There must be at least one output variable
+        - fn_description: String. Function description to describe process of transforming input variables to output variables. Variables must be enclosed in <> and listed in order of appearance in function input.
+        - output_format: String. Dictionary containing output variables names and description for each variable.
            
         Inputs (optional):
-        - variable_names: List. How the variables should be named in a list, if you don't want to use the default var1, var2, e.g.
         - examples: Dict or List[Dict]. Examples in Dictionary form with the input and output variables (list if more than one)
-        - delimiter: String. The delimiter to enclose input and output keys with
-        - kwargs: Dict. Additional arguments you would like to pass on to the strict_json function
+        - external_fn: Python Function. If defined, instead of using LLM to process the function, we will run the external function. 
+            If there are multiple outputs of this function, we will map it to the keys of `output_format` in a one-to-one fashion
+        - fn_name: String. If provided, this will be the name of the function. Otherwise, if `external_fn` is provided, it will be the name of `external_fn`. Otherwise, we will use LLM to generate a function name from the `fn_description`
+        - **kwargs: Dict. Additional arguments you would like to pass on to the strict_json function
         
         ## Example
-        fn_description = 'Output the sum of num1 and num2'
+        fn_description = 'Output the sum of <num1> and <num2>'
         output_format = {'output': 'sum of two numbers'}
-        variable_names = ['num1', 'num2']
         examples = [{'num1': 5, 'num2': 6, 'output': 11}, {'num1': 2, 'num2': 4, 'output': 6}]
         '''
         
@@ -444,16 +456,45 @@ class Function:
         self.output_format = output_format
         
         # Optional variables
-        self.variable_names = variable_names
         self.examples = examples
+        self.external_fn = external_fn
+        self.fn_name = fn_name
         self.kwargs = kwargs
         
+        self.variable_names = []
+        # use regex to extract variables from function description
+        matches = re.findall(r'<(.*?)>', self.fn_description)
+
+        for match in matches:
+            first_half = match.split(':')[0]
+            if first_half not in self.variable_names:
+                self.variable_names.append(first_half)
+                
+        # generate function name if not defined
+        if self.fn_name is None:
+            # if external function has a name, use it
+            if self.external_fn is not None and hasattr(self.external_fn, '__name__'):
+                self.fn_name = self.external_fn.__name__
+            # otherwise, generate name out
+            else:
+                res = strict_json(system_prompt = "Output a function name to summarise the usage of this function.",
+                                  user_prompt = str(self.fn_description),
+                                  output_format = {"Thoughts": "What function does", "Name": "Function name with _ separating words that summarises what function does"})
+                self.fn_name = res['Name']
+                
+        # change instance's name to function's name
+        self.__name__ = self.fn_name
+
+        # Append examples to description
         if self.examples is not None:
             self.fn_description += '\nExamples:\n' + str(examples)
+      
+    def __str__(self):
+        ''' Prints out the function's parameters '''
+        return f'Description: {self.fn_description}\nInput: {self.variable_names}\nOutput: {self.output_format}\n'
         
     def __call__(self, *args, **kwargs):
         ''' Describes the function, and inputs the relevant parameters as either unnamed variables (args) or named variables (kwargs)
-        If there is any variable that needs to be strictly converted to a datatype, put mapping function in input_type or output_type
         
         Inputs:
         - *args: Tuple. Unnamed input variables of the function. Will be processed to var1, var2 and so on based on order in the tuple
@@ -473,12 +514,25 @@ class Function:
                 function_kwargs[self.variable_names[num]] = arg
             else:
                 function_kwargs['var'+str(num+1)] = arg
-
-        # do the function. 
-        res = strict_json(system_prompt = self.fn_description,
-                        user_prompt = function_kwargs,
-                        output_format = self.output_format, 
-                        **self.kwargs, **strict_json_kwargs)
+                
+        # If strict_json function, do the function. 
+        if self.external_fn is None:
+            res = strict_json(system_prompt = self.fn_description,
+                            user_prompt = function_kwargs,
+                            output_format = self.output_format, 
+                            **self.kwargs, **strict_json_kwargs)
+            
+        # Else run the external function
+        else:
+            res = {}
+            fn_output = self.external_fn(**function_kwargs)
+            output_keys = list(self.output_format.keys())
+            # convert the external function into a tuple format to parse it through the JSON dictionary output format
+            if not isinstance(fn_output, tuple):
+                fn_output = [fn_output]
+            
+            for i in range(len(fn_output)):
+                res[output_keys[i]] = fn_output[i]
                 
         return res
     

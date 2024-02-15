@@ -1,7 +1,17 @@
+15 Feb 2024 (v3.0.1)
+- Added Agent.ipynb, a tutorial for agents
+- Added StrictJSON Agents which are initialisable with name and description
+- Agents can take in functions of class `Function`
+- Agents can run(task) and also assign(task) and step() through them
+- Modified `Function` to cater for external functions as well
+- Added a fn_name in `Function` which will be the name of parameter (if provided), or name of the external function (if provided), otherwise it will be inferred by LLM from fn_description
+- Added in `bool` type forcing to `strict_json`
+
 9 Feb 2024 (v2.2.2)
 - Exposed the LLM variable so user can use any llm they want
 - changed `strict_function` naming to `Function` to match convention of class names being capitalised (`strict_function` still works for legacy support.)
 - added legacy support for `strict_text` and `strict_output`, which were the earlier function names of the current `strict_json`
+- Variables for `Function` now enclosed in <> in `fn_description` for better performance
 
 8 Feb 2024 (v2.2.1)
 - Added in LLM-based checks by using type: ensure <requirement> in output field

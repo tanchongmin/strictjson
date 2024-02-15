@@ -2,16 +2,19 @@
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 
-### Main Functionalities (v2.2.2) 9 Feb 2024 (see Tutorial.ipynb)
+### Base Functionalities (see Tutorial.ipynb)
 - Ensures LLM outputs into a dictionary based on a JSON format (HUGE: Nested lists and dictionaries now supported)
-- Supports `int`, `float`, `str`, `dict`, `list`, `Dict[]`, `List[]`, `Enum[]` type forcing with LLM-based error correction, as well as LLM-based error correction using `type: ensure <restriction>`, and (advanced) custom user checks using `custom_checks`
+- Supports `int`, `float`, `str`, `dict`, `list`, `Dict[]`, `List[]`, `Enum[]`, `bool` type forcing with LLM-based error correction, as well as LLM-based error correction using `type: ensure <restriction>`, and (advanced) custom user checks using `custom_checks`
 - Easy construction of LLM-based functions using ```Function``` (Note: renamed from `strict_function` to keep in line with naming convention of capitalised class groups. `strict_function` still works for legacy support.)
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
 
-### Agent Functionalities (coming soon!)
+### HUGE: Agent Functionalities are here! (see Agent.ipynb)
+- Task-based Agents which will break down tasks into subtasks and solve them in bite-sized portions
 - Agents with registered functions as skills
-- Multiple agents can choose who they want to interact with in a sequential manner (Multi-hop Chain-of-Thought)
+
+### Upcoming Agent Functionalities (coming soon!)
+- Multiple agents in a Task Group
 - Retrieval Augmented Generation (RAG) - based selection of functions (to be added)
 - RAG-based selection of memory of few-shot examples of how to use functions and how to perform task based on similar tasks done in the past (to be added)
 
@@ -82,7 +85,7 @@ print(res)
 ## 3. Type forcing
 - Generally, ```strict_json``` will infer the data type automatically for you for the output fields
 - However, if you would like very specific data types, you can do data forcing using ```type: <data_type>``` at the last part of the output field description
-- ```<data_type>``` must be of the form `int`, `float`, `str`, `dict`, `list`, `Dict[]`, `List[]`, `Enum[]`
+- ```<data_type>``` must be of the form `int`, `float`, `str`, `dict`, `list`, `Dict[]`, `List[]`, `Enum[]`, `bool` for type checking to work
 - The `Enum` and `List` are not case sensitive, so `enum` and `list` works just as well
 - For `Enum[list_of_category_names]`, it is best to give an "Other" category in case the LLM fails to classify correctly with the other options.
 - If `list` or `List[]` is not formatted correctly in LLM's output, we will correct it by asking the LLM to list out the elements line by line
@@ -100,13 +103,14 @@ res = strict_json(system_prompt = 'You are a classifier',
                     user_prompt = 'It is a beautiful and sunny day',
                     output_format = {'Sentiment': 'Type of Sentiment, type: Enum["Pos", "Neg", "Other"]',
                                     'Adjectives': 'List of adjectives, type: List[str]',
-                                    'Words': 'Number of words, type: int'})
+                                    'Words': 'Number of words, type: int',
+                                    'In English': 'Whether sentence is in English, type: bool'})
                                     
 print(res)
 ```
 
 #### Example Output 1
-```{'Sentiment': 'Pos', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}```
+```{'Sentiment': 'Pos', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7, 'In English': True}```
 
 #### Example Usage 2
 ```python
@@ -128,27 +132,31 @@ print(res)
 ```'Sample venues': [{'Venue': 'Beachside Resort', 'Description': 'A beautiful resort with stunning views of the beach. Perfect for a summer birthday party.'}, {'Venue': 'Indoor Trampoline Park', 'Description': 'An exciting venue with trampolines and fun activities. Ideal for an active and energetic birthday celebration.'}]}```
 
 ## 4. Strict JSON Functions
-- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
-- Use angle brackets <> to enclose variable names
+- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions (or wraps external functions for use with Strict JSON Agents)
+- Use angle brackets <> to enclose input variable names. First input variable name to appear in `fn_description` will be first input variable and second to appear will be second input variable. For example, `fn_description = 'Adds up two numbers, <var1> and <var2>'` will result in a function with first input variable `var1` and second input variable `var2`
+- (Optional) If you would like greater specificity in your function's input, you can describe the variable after the : in the input variable name, e.g. `<var1: an integer from 10 to 30`. Here, `var1` is the input variable and `an integer from 10 to 30` is the description.
 - Inputs (compulsory):
-    - **fn_description** - Function description to describe process of transforming input variables to output variables
-    - **output_format** - Dictionary containing output variables names and description for each variable. There must be at least one output variable
+    - **fn_description**: String. Function description to describe process of transforming input variables to output variables. Variables must be enclosed in <> and listed in order of appearance in function input.
+    - **output_format**: String. Dictionary containing output variables names and description for each variable.
+    
 - Inputs (optional):
-    - **variable_names** - How the variables should be named in a list, if you don't want to use the default var1, var2, e.g.
-    - **examples** - Examples in Dictionary form with the input and output variables (list if more than one)
-    - **kwargs** - Additional arguments you would like to pass on to the ```strict_json``` function
+    - **examples** - Dict or List[Dict]. Examples in Dictionary form with the input and output variables (list if more than one)
+    - **external_fn** - Python Function. If defined, instead of using LLM to process the function, we will run the external function. 
+        If there are multiple outputs of this function, we will map it to the keys of `output_format` in a one-to-one fashion
+    - **fn_name** - String. If provided, this will be the name of the function. Otherwise, if `external_fn` is provided, it will be the name of `external_fn`. Otherwise, we will use LLM to generate a function name from the `fn_description`
+    - **kwargs** - Dict. Additional arguments you would like to pass on to the strict_json function
         
 - Outputs:
     JSON of output variables in a dictionary (similar to ```strict_json```)
     
 #### Example Usage 1 (Description only)
 ```python
-# Construct the function: var1 will be first input variable, var2 will be second input variable and so on
-fn = Function(fn_description = 'Output a sentence with words <var1> and <var2> in the style of <var3>', 
+# basic configuration with variable names (in order of appearance in fn_description)
+fn = Function(fn_description = 'Output a sentence with <obj> and <entity> in the style of <emotion>', 
                      output_format = {'output': 'sentence'})
 
 # Use the function
-fn('ball', 'dog', 'happy')
+fn('ball', 'dog', 'happy') #obj, entity, emotion
 ```
 
 #### Example Output 1
@@ -164,7 +172,7 @@ fn = Function(fn_description = 'Map input to output based on examples',
                                  {'var1': 7, 'var2': 4, 'output': 28}])
 
 # Use the function
-fn(2, 10)
+fn(2, 10) #var1, var2
 ```
 
 #### Example Output 2
@@ -173,21 +181,37 @@ fn(2, 10)
 #### Example Usage 3 (Description and Variable Names and Examples)
 ```python
 # Construct the function: description and examples with variable names
-# variable names will be referenced in order of input
+# variable names will be referenced in order of appearance in fn_description
 fn = Function(fn_description = 'Output the sum and difference of <num1> and <num2>', 
                  output_format = {'sum': 'sum of two numbers', 
-                                  'difference': 'absolute difference of two numbers'}, 
-                 variable_names = ['num1', 'num2'],
+                                  'difference': 'absolute difference of two numbers'},
                  examples = {'num1': 2, 'num2': 4, 'sum': 6, 'difference': 2})
 
 # Use the function
-fn(3, 4)
+fn(3, 4) #num1, num2
 ```
 
 #### Example Output 3
 ```{'sum': 7, 'difference': 1}```
 
-# 5. Integrating with your own LLM
+#### Example Usage 4 (External Function with Variable Description)
+```python
+def binary_to_decimal(x):
+    return int(str(x), 2)
+
+# an external function with a single output variable, with an expressive variable description
+fn = Function(fn_description = 'Convert input <x: a binary number in base 2> to base 10', 
+            output_format = {'output1': 'x in base 10'},
+            external_fn = binary_to_decimal)
+
+# Use the function
+fn(10) #x
+```
+
+#### Example Output 4
+```{'output1': 2}```
+
+## 5. Integrating with your own LLM
 - StrictJSON has native support for OpenAI LLMs (you can put the LLM API parameters inside `strict_json` or `Function` directly)
 - If your LLM is not from OpenAI, it is really easy to integrate with your own LLM
 - Simply pass your custom LLM function inside the `llm` parameter of `strict_json` or `Function`
