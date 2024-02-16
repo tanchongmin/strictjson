@@ -24,7 +24,7 @@
 - StrictJSON helps to ensure all output fields are there and of the right format required for downstream processing
 
 ### Tutorials and Community Support
-- Created: 28 Oct 2023
+- Created: 7 Apr 2023
 - Collaborators welcome
 - Video tutorial: [https://www.youtube.com/watch?v=IjTUKAciTCg](https://www.youtube.com/watch?v=1N-znDTlhNc)
 - Discussion Channel (my discord - John's AI Group): [discord.gg/bzp87AHJy5](discord.gg/bzp87AHJy5)
