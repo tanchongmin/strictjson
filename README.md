@@ -12,6 +12,7 @@
 ### HUGE: Agent Functionalities are here! (see Agent.ipynb)
 - Task-based Agents which will break down tasks into subtasks and solve them in bite-sized portions
 - Agents with registered functions as skills
+- Acknowledgement: Created under the time at Simbian AI (https://simbian.ai/)
 
 ### Upcoming Agent Functionalities (coming soon!)
 - Multiple agents in a Task Group
