@@ -1,3 +1,6 @@
+16 Feb 2024 (v3.0.2)
+- Added select_function and use_function to do manual function usage for agents
+
 15 Feb 2024 (v3.0.1)
 - Added Agent.ipynb, a tutorial for agents
 - Added StrictJSON Agents which are initialisable with name and description

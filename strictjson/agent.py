@@ -175,10 +175,30 @@ class Agent:
         ''' Prints out the list of functions available to the agent '''
         functions = self.list_functions()
         print('\n'.join(functions))
+        
+    def select_function(self, task: str = ''):
+        ''' Based on the task, output the next function name and input parameters '''
+        res = self.query(query = f"Overall Task: {task}\nProcess the Overall Task using exactly one Equipped Function. For Input Values, output empty dictionary {{}} if use_llm or end_task is selected.",
+                          output_format = {"Equipped Function": "What Equipped Function to use to solve the task", "Input Values": "Input of function in dictionary form of parameter name: value, type: dict"},
+                          provide_function_list = True)
+        
+        # if model decides to use llm, feed the entire task into the llm
+        if res["Equipped Function"] == "use_llm":
+            res["Input Values"] = {"task": task}
+        
+        return res["Equipped Function"], res["Input Values"]
     
     def use_function(self, function_name: str, function_params: dict):
         ''' Uses the function '''
-        return self.function_map[function_name](**function_params)
+        if function_name == "use_llm":
+            res = self.query(query = f'Perform the following task: {function_params["task"]}\nIf asked to generate, generate out fully', 
+                            output_format = {"Task Output": "Perform the task concisely and show the output"},
+                            provide_function_list = False)
+            return res
+        elif function_name == "end_task":
+            return
+        else:
+            return self.function_map[function_name](**function_params)
     
     ## Functions for Task Solving ##
     def assign_task(self, task: str):
@@ -187,9 +207,10 @@ class Agent:
         self.subtasks_completed = {}
         self.task_completed = False
         
-    def get_next_subtask(self) -> str:
+    def get_next_subtask(self):
         ''' Based on what the task is and the subtasks completed, we get the next subtask, function and input parameters'''
-        res = self.query(query = f"Overall Task: {self.task}\nCompleted Steps: {list(self.subtasks_completed.keys())}\nBased on the overall task and the completed steps, suggest the next step for the Large Language Model to do. Ensure the next step does only what the Task specifies exactly and is a manageable part of the overall task and can be processed by exactly one Equipped Function. If task is completed, call end_task. For Input Values, output empty dictionary {{}} if use_llm or end_task is selected.",
+        
+        res = self.query(query = f"Overall Task: {self.task}\nCompleted Steps: {self.subtasks_completed.items()}\nBased on the overall task and the completed steps, suggest the next step for the Large Language Model to do. Ensure the next step does only what the Task specifies exactly and is a manageable part of the overall task and can be processed by exactly one Equipped Function. If task is completed, call end_task. For Input Values, output empty dictionary {{}} if use_llm or end_task is selected.",
                           output_format = {"Next Step": "Describe what to do for next step", "Equipped Function": "What Equipped Function to use for next step", "Input Values": "Input of function in dictionary form of parameter name: value, type: dict"},
                           provide_function_list = True)
         
@@ -246,8 +267,8 @@ class Agent:
                 if function_name == "use_llm":
                     if verbose: 
                         print(f'Getting LLM to perform the following task: {subtask}')
-                    res = self.query(query = f'Perform the following task: {subtask}\nOverall context: {self.task}\nCompleted subtasks: {self.subtasks_completed}\nIf asked to generate, generate out fully', 
-                                    output_format = {"Task Output": "Perform the task and show the output"},
+                    res = self.query(query = f'Perform the following task: {subtask}\nOverall context: {self.task}\nCompleted subtasks: {self.subtasks_completed.items()}\nIf asked to generate, generate out fully', 
+                                    output_format = {"Task Output": "Perform the task concisely and show the output"},
                                     provide_function_list = False)
                     summary_msg = res["Task Output"]
 
