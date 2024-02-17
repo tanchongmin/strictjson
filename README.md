@@ -1,7 +1,7 @@
 # Strict JSON v3.0.2
-UPDATE: Future development of StrictJSON will be on this repo instead - do help to star this repo as well!
+UPDATE: Future development of StrictJSON for Agentic Workflows will be on this repo instead - do help to star this repo as well!
+
 Repo: https://github.com/simbianai/taskgen
-- We will be focusing on adapting StrictJSON for Agentic Workflows, do contribute your ideas there as well :)
 
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
