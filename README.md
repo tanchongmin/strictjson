@@ -1,4 +1,8 @@
 # Strict JSON v3.0.2
+UPDATE: Future development of StrictJSON will be on this repo instead - do help to star this repo as well!
+Repo: https://github.com/simbianai/taskgen
+- We will be focusing on adapting StrictJSON for Agentic Workflows, do contribute your ideas there as well :)
+
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 
@@ -9,25 +13,9 @@
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
 
-### HUGE: Agent Functionalities are here! (see Agent.ipynb)
-- Task-based Agents which will break down tasks into subtasks and solve them in bite-sized portions
-- Agents with registered functions as skills
-- Acknowledgement: Created under the time at Simbian AI (https://simbian.ai/)
-
-### Upcoming Agent Functionalities (coming soon!)
-- Multiple agents in a Task Group
-- Retrieval Augmented Generation (RAG) - based selection of functions (to be added)
-- RAG-based selection of memory of few-shot examples of how to use functions and how to perform task based on similar tasks done in the past (to be added)
-
-### Benefits of JSON messaging over agentic frameworks using conversational free-text like AutoGen
-- JSON format helps do Chain-of-Thought prompting naturally and is less verbose than free text
-- JSON format allows natural parsing of multiple output fields by agents
-- StrictJSON helps to ensure all output fields are there and of the right format required for downstream processing
-
 ### Tutorials and Community Support
 - Created: 7 Apr 2023
 - Collaborators welcome
-- Video tutorial: [https://www.youtube.com/watch?v=IjTUKAciTCg](https://www.youtube.com/watch?v=1N-znDTlhNc)
 - Discussion Channel (my discord - John's AI Group): [discord.gg/bzp87AHJy5](discord.gg/bzp87AHJy5)
 
 
