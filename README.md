@@ -9,7 +9,7 @@
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
 
-### Agent functionalities (see Agent.ipynb) - see https://github.com/simbianai/taskgen for most updated functionalities
+### Agent functionalities (see Agent.ipynb)
 - Task-based Agents which will break down tasks into subtasks and solve them in bite-sized portions
 - Agents with registered functions as skills
 
