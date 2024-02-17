@@ -13,6 +13,15 @@ Repo: https://github.com/simbianai/taskgen
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
 
+### Agent functionalities (see Agent.ipynb) - see https://github.com/simbianai/taskgen for most updated functionalities
+- Task-based Agents which will break down tasks into subtasks and solve them in bite-sized portions
+- Agents with registered functions as skills
+
+### Benefits of JSON messaging over agentic frameworks using conversational free-text like AutoGen
+- JSON format helps do Chain-of-Thought prompting naturally and is less verbose than free text
+- JSON format allows natural parsing of multiple output fields by agents
+- StrictJSON helps to ensure all output fields are there and of the right format required for downstream processing
+
 ### Tutorials and Community Support
 - Created: 7 Apr 2023
 - Collaborators welcome
@@ -121,8 +130,8 @@ print(res)
 
 ```'Sample venues': [{'Venue': 'Beachside Resort', 'Description': 'A beautiful resort with stunning views of the beach. Perfect for a summer birthday party.'}, {'Venue': 'Indoor Trampoline Park', 'Description': 'An exciting venue with trampolines and fun activities. Ideal for an active and energetic birthday celebration.'}]}```
 
-## 4. Strict JSON Functions
-- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions (or wraps external functions for use with Strict JSON Agents)
+## 4. Functions
+- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions (or wraps external functions for StrictJSON Agents)
 - Use angle brackets <> to enclose input variable names. First input variable name to appear in `fn_description` will be first input variable and second to appear will be second input variable. For example, `fn_description = 'Adds up two numbers, <var1> and <var2>'` will result in a function with first input variable `var1` and second input variable `var2`
 - (Optional) If you would like greater specificity in your function's input, you can describe the variable after the : in the input variable name, e.g. `<var1: an integer from 10 to 30`. Here, `var1` is the input variable and `an integer from 10 to 30` is the description.
 - Inputs (compulsory):
