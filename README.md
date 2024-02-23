@@ -12,21 +12,15 @@
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
 
-### Agent functionalities (see Agent.ipynb)
+### Agent functionalities (see Agent.ipynb) - Check out TaskGen for the more advanced ones
 - Task-based Agents which will break down tasks into subtasks and solve them in bite-sized portions
 - Agents with registered functions as skills
-
-### Benefits of JSON messaging over agentic frameworks using conversational free-text like AutoGen
-- JSON format helps do Chain-of-Thought prompting naturally and is less verbose than free text
-- JSON format allows natural parsing of multiple output fields by agents
-- StrictJSON helps to ensure all output fields are there and of the right format required for downstream processing
 
 ### Tutorials and Community Support
 - Created: 7 Apr 2023
 - Collaborators welcome
 - Video tutorial: [https://www.youtube.com/watch?v=IjTUKAciTCg](https://www.youtube.com/watch?v=1N-znDTlhNc)
 - Discussion Channel (my discord - John's AI Group): [discord.gg/bzp87AHJy5](discord.gg/bzp87AHJy5)
-
 
 ## How do I use this? 
 1. Download package via command line ```pip install strictjson```
