@@ -176,7 +176,7 @@ fn(2, 10) #var1, var2
 #### Example Output 2
 ```{'output': 20}```
 
-#### Example Usage 3 (Description and Variable Names and Examples)
+#### Example Usage 3 (Description and Examples)
 ```python
 # Construct the function: description and examples with variable names
 # variable names will be referenced in order of appearance in fn_description
