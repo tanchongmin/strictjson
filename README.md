@@ -12,10 +12,6 @@
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
 
-### Agent functionalities (see Agent.ipynb) - Check out TaskGen for the more advanced ones
-- Task-based Agents which will break down tasks into subtasks and solve them in bite-sized portions
-- Agents with registered functions as skills
-
 ### Tutorials and Community Support
 - Created: 7 Apr 2023
 - Collaborators welcome
