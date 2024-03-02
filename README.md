@@ -125,7 +125,7 @@ print(res)
 - (Optional) If you would like greater specificity in your function's input, you can describe the variable after the : in the input variable name, e.g. `<var1: an integer from 10 to 30`. Here, `var1` is the input variable and `an integer from 10 to 30` is the description.
 - Inputs (compulsory):
     - **fn_description**: String. Function description to describe process of transforming input variables to output variables. Variables must be enclosed in <> and listed in order of appearance in function input.
-    - **output_format**: String. Dictionary containing output variables names and description for each variable.
+    - **output_format**: Dict. Dictionary containing output variables names and description for each variable.
     
 - Inputs (optional):
     - **examples** - Dict or List[Dict]. Examples in Dictionary form with the input and output variables (list if more than one)
