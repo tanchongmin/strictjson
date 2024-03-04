@@ -1,4 +1,4 @@
-# Strict JSON v3.0.2
+# Strict JSON v4.0.0
 [UPDATE]: For Agentic Framework, do check out TaskGen (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
 - https://github.com/simbianai/taskgen
 
@@ -119,19 +119,16 @@ print(res)
 
 ```'Sample venues': [{'Venue': 'Beachside Resort', 'Description': 'A beautiful resort with stunning views of the beach. Perfect for a summer birthday party.'}, {'Venue': 'Indoor Trampoline Park', 'Description': 'An exciting venue with trampolines and fun activities. Ideal for an active and energetic birthday celebration.'}]}```
 
-## 4. Functions
-- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions (or wraps external functions for StrictJSON Agents)
+# 4. Functions
+- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions
 - Use angle brackets <> to enclose input variable names. First input variable name to appear in `fn_description` will be first input variable and second to appear will be second input variable. For example, `fn_description = 'Adds up two numbers, <var1> and <var2>'` will result in a function with first input variable `var1` and second input variable `var2`
-- (Optional) If you would like greater specificity in your function's input, you can describe the variable after the : in the input variable name, e.g. `<var1: an integer from 10 to 30`. Here, `var1` is the input variable and `an integer from 10 to 30` is the description.
-- Inputs (compulsory):
+
+- Inputs (primary):
     - **fn_description**: String. Function description to describe process of transforming input variables to output variables. Variables must be enclosed in <> and listed in order of appearance in function input.
     - **output_format**: Dict. Dictionary containing output variables names and description for each variable.
     
 - Inputs (optional):
     - **examples** - Dict or List[Dict]. Examples in Dictionary form with the input and output variables (list if more than one)
-    - **external_fn** - Python Function. If defined, instead of using LLM to process the function, we will run the external function. 
-        If there are multiple outputs of this function, we will map it to the keys of `output_format` in a one-to-one fashion
-    - **fn_name** - String. If provided, this will be the name of the function. Otherwise, if `external_fn` is provided, it will be the name of `external_fn`. Otherwise, we will use LLM to generate a function name from the `fn_description`
     - **kwargs** - Dict. Additional arguments you would like to pass on to the strict_json function
         
 - Outputs:
@@ -153,7 +150,7 @@ fn('ball', 'dog', 'happy') #obj, entity, emotion
 #### Example Usage 2 (Examples only)
 ```python
 # Construct the function: infer pattern from just examples without description (here it is multiplication)
-fn = Function(fn_description = 'Map input to output based on examples', 
+fn = Function(fn_description = 'Map <var1> and <var2> to output based on examples', 
                      output_format = {'output': 'final answer'}, 
                      examples = [{'var1': 3, 'var2': 2, 'output': 6}, 
                                  {'var1': 5, 'var2': 3, 'output': 15}, 
@@ -181,23 +178,6 @@ fn(3, 4) #num1, num2
 
 #### Example Output 3
 ```{'sum': 7, 'difference': 1}```
-
-#### Example Usage 4 (External Function with Variable Description)
-```python
-def binary_to_decimal(x):
-    return int(str(x), 2)
-
-# an external function with a single output variable, with an expressive variable description
-fn = Function(fn_description = 'Convert input <x: a binary number in base 2> to base 10', 
-            output_format = {'output1': 'x in base 10'},
-            external_fn = binary_to_decimal)
-
-# Use the function
-fn(10) #x
-```
-
-#### Example Output 4
-```{'output1': 2}```
 
 ## 5. Integrating with your own LLM
 - StrictJSON has native support for OpenAI LLMs (you can put the LLM API parameters inside `strict_json` or `Function` directly)
@@ -263,3 +243,41 @@ print(res)
 
 #### Example Output
 ```{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 6}```
+
+## 7. Nested Outputs
+- StrictJSON supports nested outputs like nested lists and dictionaries
+
+#### Example Input
+```python
+res = strict_json(system_prompt = 'You are a classifier',
+                    user_prompt = 'It is a beautiful and sunny day',
+                    output_format = {'Sentiment': ['Type of Sentiment', 
+                                                   'Strength of Sentiment, type: Enum[1, 2, 3, 4, 5]'],
+                                    'Adjectives': "Name and Description, type: List[Dict['Name', 'Description']]",
+                                    'Words': {
+                                        'Number of words': 'Word count', 
+                                        'Language': {
+                                              'English': 'Whether it is English, type: bool',
+                                              'Chinese': 'Whether it is Chinese, type: bool'
+                                                  },
+                                        'Proper Words': 'Whether the words are proper in the native language, type: bool'
+                                        }
+                                    })
+
+print(res)
+```
+
+#### Example Output
+`{'Sentiment': ['Positive', 3],`
+
+`'Adjectives': [{'Name': 'beautiful', 'Description': 'pleasing to the senses'}, {'Name': 'sunny', 'Description': 'filled with sunshine'}],`
+
+`'Words':`
+
+`     {'Number of words': 6,`
+    
+`     'Language': {'English': True, 'Chinese': False},`
+
+`     'Proper Words': True}`
+    
+`}`

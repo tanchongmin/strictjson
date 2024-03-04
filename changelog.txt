@@ -1,3 +1,10 @@
+4 Mar 2024 (v4.0.0)
+- Better parsing that caters for newlines and extra spaces for nested datatypes
+- Changed the dictionary parsing of StrictJSON to ensure that we extract the leftmost and rightmost { and } respectively to do ast.literal_eval. Previously might have the quotation marks at the left and right which affected parsing
+- Changed the bool parsing of StrictJSON to convert true/false to True/False first so as to make it parseable by ast.literal_eval
+- Made list processing in StrictJSON more robust
+- Moved Agentic Framework entirely to TaskGen
+
 16 Feb 2024 (v3.0.2)
 - Added select_function and use_function to do manual function usage for agents
 
