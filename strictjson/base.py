@@ -508,7 +508,7 @@ Update text enclosed in <>. Be concise. Output only the json string without any 
                             else:
                                 print('Requirement met\n\n')
                 if double_quotes:
-                    return json.loads(json.dumps(end_dict, ensure_ascii=False))
+                    return json.dumps(end_dict, ensure_ascii=False)
                 else:
                     return end_dict
 
