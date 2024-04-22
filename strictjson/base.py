@@ -420,7 +420,7 @@ def get_fn_description(my_function) -> (str, list):
 
 ### Main Functions ###
                 
-def strict_json(system_prompt: str, user_prompt: str, output_format: dict, double_quotes=False, custom_checks: dict = dict(), check_data = None, delimiter: str = '###', num_tries: int = 3, openai_json_mode: bool = False, **kwargs):
+def strict_json(system_prompt: str, user_prompt: str, output_format: dict, return_as_json = False, custom_checks: dict = dict(), check_data = None, delimiter: str = '###', num_tries: int = 3, openai_json_mode: bool = False, **kwargs):
     ''' Ensures that OpenAI will always adhere to the desired output JSON format defined in output_format. 
     Uses rule-based iterative feedback to ask GPT to self-correct.
     Keeps trying up to num_tries it it does not. Returns empty JSON if unable to after num_tries iterations.
@@ -431,6 +431,7 @@ def strict_json(system_prompt: str, user_prompt: str, output_format: dict, doubl
     - output_format: Dict. JSON format with the key as the output key, and the value as the output description
     
     Inputs (optional):
+    - return_as_json: Bool. Default: False. Whether to return the output as a json. If False, returns as Python dict. If True, returns as json string
     - custom_checks: Dict. Key is output key, value is function which does checking of content for output field
     - check_data: Any data type. The additional data for custom_checks to use if required
     - delimiter: String (Default: '###'). This is the delimiter to surround the keys. With delimiter ###, key becomes ###key###
@@ -457,12 +458,15 @@ def strict_json(system_prompt: str, user_prompt: str, output_format: dict, doubl
         my_user_prompt = str(user_prompt) 
             
         res = chat(my_system_prompt, my_user_prompt, response_format = {"type": "json_object"}, **kwargs)
-            
-        try:
-            loaded_json = json.loads(res)
-        except Exception as e:
-            loaded_json = {}
-        return loaded_json
+        
+        if return_as_json:
+            return res
+        else:
+            try:
+                loaded_json = json.loads(res)
+            except Exception as e:
+                loaded_json = {}
+            return loaded_json
         
     # Otherwise, implement JSON parsing using Strict JSON
     else:
@@ -473,7 +477,7 @@ def strict_json(system_prompt: str, user_prompt: str, output_format: dict, doubl
         new_output_format = wrap_with_angle_brackets(output_format, delimiter, 1)
         
         output_format_prompt = f'''\nOutput in the following json string format: {new_output_format}
-Update text enclosed in <>. Be concise. Output only the json string without any explanation.'''
+Update text enclosed in <>. Be concise. Output only the json string without any explanation. You must output valid json with all keys present.'''
 
         for i in range(num_tries):
             my_system_prompt = str(system_prompt) + output_format_prompt + error_msg
@@ -507,7 +511,7 @@ Update text enclosed in <>. Be concise. Output only the json string without any 
                                 raise Exception(f'Output field of "{key}" does not meet requirement "{requirement}". Action needed: "{action_needed}"')
                             else:
                                 print('Requirement met\n\n')
-                if double_quotes:
+                if return_as_json:
                     return json.dumps(end_dict, ensure_ascii=False)
                 else:
                     return end_dict
@@ -525,7 +529,9 @@ class Function:
                  output_format: dict = {},
                  examples = None,
                  external_fn = None,
+                 is_compulsory = False,
                  fn_name = None,
+                 llm = None,
                  **kwargs):
         ''' 
         Creates an LLM-based function or wraps an external function using fn_description and outputs JSON based on output_format. 
@@ -541,7 +547,9 @@ Can also be done automatically by providing docstring with input variable names 
         - examples: Dict or List[Dict]. Examples in Dictionary form with the input and output variables (list if more than one)
         - external_fn: Python Function. If defined, instead of using LLM to process the function, we will run the external function. 
             If there are multiple outputs of this function, we will map it to the keys of `output_format` in a one-to-one fashion
+        - is_compulsory: Bool. Default: False. This is whether to always use the Function when doing planning in Agents
         - fn_name: String. If provided, this will be the name of the function. Otherwise, if `external_fn` is provided, it will be the name of `external_fn`. Otherwise, we will use LLM to generate a function name from the `fn_description`
+        - llm: Function. The llm parameter to pass into strict_json
         - **kwargs: Dict. Additional arguments you would like to pass on to the strict_json function
         
         ## Example
@@ -575,7 +583,9 @@ Can also be done automatically by providing docstring with input variable names 
         self.output_format = output_format
         self.examples = examples
         self.external_fn = external_fn
+        self.is_compulsory = is_compulsory
         self.fn_name = fn_name
+        self.llm = llm
         self.kwargs = kwargs
         
         self.variable_names = []
@@ -608,7 +618,9 @@ Can also be done automatically by providing docstring with input variable names 
             else:
                 res = strict_json(system_prompt = "Output a function name to summarise the usage of this function.",
                                   user_prompt = str(self.fn_description),
-                                  output_format = {"Thoughts": "What function does", "Name": "Function name with _ separating words that summarises what function does"})
+                                  output_format = {"Thoughts": "What function does", "Name": "Function name with _ separating words that summarises what function does"},
+                                 llm = self.llm,
+                                 **self.kwargs)
                 self.fn_name = res['Name']
                 
         # change instance's name to function's name
@@ -661,6 +673,7 @@ Can also be done automatically by providing docstring with input variable names 
             res = strict_json(system_prompt = self.fn_description,
                             user_prompt = function_kwargs,
                             output_format = self.output_format,
+                            llm = self.llm,
                             **self.kwargs, **strict_json_kwargs)
             
         # Else run the external function

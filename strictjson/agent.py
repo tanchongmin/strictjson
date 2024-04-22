@@ -3,6 +3,7 @@ import openai
 from openai import OpenAI
 import numpy as np
 import copy
+import dill as pickle
 from .base import *
 
 ### Helper Functions
@@ -35,6 +36,9 @@ class Ranker:
         Inputs:
         query: Str. The query you want to evaluate
         key: Str. The key you want to evaluate'''
+        # ensure they are both str
+        query = str(query)
+        key = str(key)
      
         # defaults to OpenAI if ranking_fn is not provided
         if self.ranking_fn is None:
@@ -67,15 +71,17 @@ class Memory:
             - Example mapping: `lambda x: x.fn_description` (If x is a Class and the string you want to compare for similarity is the fn_description attribute of that class)
         - `approach`: str. Either `retrieve_by_ranker` or `retrieve_by_llm` to retrieve memory items
             - Ranker is faster and cheaper as it compares via embeddings, but are inferior to LLM-based methods for contextual information
+        - `llm`: Function. The llm to use for `strict_json` llm retriever
         - `ranker`: `Ranker`. The Ranker which defines a similarity score between a query and a key. Default: OpenAI `text-embedding-3-small` model. 
             - Can be replaced with a function which returns similarity score from 0 to 1 when given a query and key
      '''
-    def __init__(self, memory: list = [], top_k: int = 3, mapper = lambda x: x, approach = 'retrieve_by_ranker', ranker = Ranker()):
+    def __init__(self, memory: list = [], top_k: int = 3, mapper = lambda x: x, approach = 'retrieve_by_ranker', llm = None, ranker = Ranker()):
         self.memory = memory
         self.top_k = top_k
         self.mapper = mapper
         self.approach = approach
         self.ranker = ranker
+        self.llm = llm
         
     def retrieve(self, task: str) -> list:
         ''' Performs retrieval of top_k similar memories according to approach stated '''
@@ -95,7 +101,8 @@ class Memory:
         ''' Performs retrieval via LLMs 
         Returns the key list as well as the value list '''
         res = strict_json(f'You are to output the top {self.top_k} most similar list items in Memory that meet this description: {task}\nMemory: {[f"{i}. {self.mapper(mem)}" for i, mem in enumerate(self.memory)]}', '', 
-              output_format = {f"top_{self.top_k}_list": f"Indices of top {self.top_k} most similar list items in Memory, type: list[int]"})
+              output_format = {f"top_{self.top_k}_list": f"Indices of top {self.top_k} most similar list items in Memory, type: list[int]"},
+              llm = self.llm)
         top_k_indices = res[f'top_{self.top_k}_list']
         return [self.memory[index] for index in top_k_indices]
     
@@ -127,9 +134,11 @@ class Agent:
                  max_subtasks: int = 5,
                  memory_bank = {'Function': Memory(top_k = 5, mapper = lambda x: x.fn_name + ': ' + x.fn_description, approach = 'retrieve_by_ranker')},
                  shared_variables = dict(),
+                 get_global_context = None,
                  default_to_llm = True,
                  verbose: bool = True,
                  debug: bool = False,
+                 llm = None,
                  **kwargs):
         ''' 
         Creates an LLM-based agent using description and outputs JSON based on output_format. 
@@ -148,9 +157,11 @@ class Agent:
             - For RAG over Documents, it is best done in a function of the Agent to retrieve more information when needed (so that we do not overload the Agent with information)
         - shared_variables. Dict. Default: empty dict. Stores the variables to be shared amongst inner functions and agents. 
             If not empty, will pass this dictionary by reference down to the inner agents and functions
+        - get_global_context. Function. Takes in self (agent variable) and returns the additional prompt (str) to be appended to `get_next_subtask` and `use_llm`. Allows for persistent agent states to be added to the prompt
         - default_to_llm. Bool. Default: True. Whether to default to use_llm function if there is no match to other functions. If False, use_llm will not be given to Agent
         - verbose: Bool. Default: True. Whether to print out intermediate thought processes of the Agent
         - debug: Bool. Default: False. Whether to debug StrictJSON messages
+        - llm: Function. The llm parameter that gets passed into Function/strict_json
         
         Inputs (optional):
         - **kwargs: Dict. Additional arguments you would like to pass on to the strict_json function
@@ -163,14 +174,16 @@ class Agent:
         self.memory_bank = memory_bank
         self.shared_variables = shared_variables
         self.default_to_llm = default_to_llm
-        
+        self.get_global_context = get_global_context
+
         self.debug = debug
-        
+        self.llm = llm
+
         # reset agent's state
         self.reset()
-        
+
         self.kwargs = kwargs
-        
+
         # start with default of only llm as the function
         self.function_map = {}
         # stores all existing function descriptions - prevent duplicate assignment of functions
@@ -179,11 +192,41 @@ class Agent:
         if self.default_to_llm:
             self.assign_functions([Function(fn_name = 'use_llm', 
                                         fn_description = f'Used only when no other function can do the task', 
+                                        is_compulsory = True,
                                         output_format = {"Output": "Output of LLM"})])
         # adds the end task function
         self.assign_functions([Function(fn_name = 'end_task',
                                        fn_description = 'Use only when task is completed',
+                                       is_compulsory = True,
                                        output_format = {})])
+        
+    def save_agent(self, filename: str):
+        ''' Saves the entire agent to filename for reuse next time '''
+        
+        if not isinstance(filename, str):
+            if filename[-4:] != '.pkl':
+                raise Exception('Filename is not ending with .pkl')
+            return
+            
+        # Open a file in write-binary mode
+        with open(filename, 'wb') as file:
+            # Use pickle.dump() to save the dictionary to the file
+            pickle.dump(self, file)
+
+        print(f"Agent saved to {filename}")
+    
+    def load_agent(self, filename: str):
+        ''' Loads the entire agent from filename '''
+        
+        if not isinstance(filename, str):
+            if filename[-4:] != '.pkl':
+                raise Exception('Filename is not ending with .pkl')
+            return
+        
+        with open(filename, 'rb') as file:
+            self = pickle.load(file)
+            print(f"Agent loaded from {filename}")
+            return self
         
     ## Generic Functions ##
     def reset(self):
@@ -212,22 +255,30 @@ class Agent:
         filtered_fn_list = None
         if task != '':
             filtered_fn_list = self.memory_bank['Function'].retrieve(task)
-            # add back use_llm and end_task if present in function_map
-            if 'use_llm' in self.function_map:
-                filtered_fn_list.append(self.function_map['use_llm'])
-            if 'end_task' in self.function_map:
-                filtered_fn_list.append(self.function_map['end_task'])
+            # add back compulsory functions (default: use_llm, end_task) if present in function_map
+            for name, function in self.function_map.items():
+                if function.is_compulsory:
+                    filtered_fn_list.append(function)
+                
+        # add in additional context to the prompt
+        global_context = ''
+        if self.get_global_context is not None:
+            global_context = 'Additional Context:' + self.get_global_context(self) + '\n'
         
         system_prompt = f"You are an agent named {self.agent_name} with the following description: ```{self.agent_description}```\n"
         if provide_function_list:
             system_prompt += f"You have the following Equipped Functions available:\n```{self.list_functions(filtered_fn_list)}```\n"
+        system_prompt += global_context
         system_prompt += query
+        
         
         res = strict_json(system_prompt = system_prompt,
         user_prompt = '',
         output_format = output_format, 
         verbose = self.debug,
+        llm = self.llm,
         **self.kwargs)
+
         return res
     
     def status(self):
@@ -272,8 +323,8 @@ class Agent:
             # add function's description into fn_description_list
             self.fn_description_list.append(function.fn_description)
                                     
-            # add function to memory bank if is not the default functions
-            if stored_fn_name not in ['use_llm', 'end_task']:
+            # add function to memory bank for RAG over functions later on if is not a compulsory functions
+            if not function.is_compulsory:
                 self.memory_bank['Function'].append(function)
             
         return self
@@ -294,7 +345,7 @@ class Agent:
         ''' Returns the list of functions available to the agent. If fn_list is given, restrict the functions to only those in the list '''
         if fn_list is not None and len(fn_list) < len(self.function_map):
             if self.verbose:
-                print('Filtered Function Names:', ', '.join([name for name, function in self.function_map.items() if function.fn_name not in ['use_llm', 'end_task'] and function in fn_list]))
+                print('Filtered Function Names:', ', '.join([name for name, function in self.function_map.items() if function in fn_list]))
             return [f'Name: {name}\n' + str(function) for name, function in self.function_map.items() if function in fn_list]
         else:
             return [f'Name: {name}\n' + str(function) for name, function in self.function_map.items()]                       
@@ -311,7 +362,7 @@ class Agent:
         return function_name, function_params
     
     def use_agent(self, agent_name: str, agent_task: str):
-        ''' Uses an inner agent to do a task for the meta agent. Task outcomes goes directly to subtasks_completed of meta agent '''
+        ''' Uses an inner agent to do a task for the meta agent. Task outcome goes directly to subtasks_completed of meta agent '''
         self.use_function(agent_name, {"instruction": agent_task}, agent_task)
         
     def use_function(self, function_name: str, function_params: dict, subtask: str = '', stateful: bool = True):
@@ -364,7 +415,6 @@ class Agent:
 
         return res
    
-        
     def get_next_subtask(self, task = ''):
         ''' Based on what the task is and the subtasks completed, we get the next subtask, function and input parameters'''
         
@@ -389,11 +439,15 @@ class Agent:
                 rag_info += f'Related {name}: ```{self.memory_bank[name].retrieve(task)}```\n'
                 
         # First select the Equipped Function
-        res = self.query(query = f'''{background_info}{rag_info}First create an Overall Plan modified from Assigned Plan with an array of steps to do Assigned Task from beginning to end, including uncompleted steps. Then, reflect on Past Subtasks Completed (note not all past subtasks are relevant to Assigned Task) to see what steps in Overall Plan are already completed. Then, generate Overall Plan Completed that outputs True for array elements of Overall Plan that are complete and False otherwsie. Then, generate the Next Step to fulfil the Assigned Task that can be performed by a single Equipped Function. If Assigned Task is completed, output end_task for Equipped Function''',
+        res = self.query(query = f'''{background_info}{rag_info}First create an Overall Plan modified from Assigned Plan with an array of steps to do Assigned Task from beginning to end, including uncompleted steps. Then, reflect on Past Subtasks Completed (note not all past subtasks are relevant to Assigned Task) to see what steps in Overall Plan are already completed. Then, generate Overall Plan Completed that outputs True for array elements of Overall Plan that are complete and False otherwise. Then, generate the Next Step to fulfil the Assigned Task that can be performed by a single Equipped Function. If Assigned Task is completed, output end_task for Equipped Function''',
                          output_format = {"Thoughts": "How to do Assigned Task", "Overall Plan": "Array of steps to complete Assigned Task from beginning to end, type: list", "Reflection": "What has been done and what is still left to do", "Overall Plan Completed": "Whether array elements in Overall Plan are already completed, type: List[bool]", "Next Step": "First non-completed element in Overall Plan", "Equipped Function": f"Name of Equipped Function to use for Next Step, type: Enum{list(self.function_map.keys())}", "Instruction": "Instruction for the Equipped Function if any"},
-                          provide_function_list = True,
+                         provide_function_list = True,
                          task = task)
-
+        
+        # end task if equipped function is incorrect
+        if res["Equipped Function"] not in self.function_map:
+            res["Equipped Function"] = "end_task"
+                
         # If equipped function is use_llm, or end_task, we don't need to do another query
         cur_function = self.function_map[res["Equipped Function"]]
         if res["Equipped Function"] == 'use_llm':
@@ -418,12 +472,15 @@ class Agent:
                 else:
                     input_format[match] = 'A suitable value'
                     
+            # if there is no input, then do not need LLM to extract out function's input
+            if input_format == {}:
+                res["Equipped Function Input"] = {}
                     
-            res2 = self.query(query = f'''{background_info}{rag_info}Current Subtask: {res["Next Step"]}\nEquipped Function Name: {res["Equipped Function"]}\nEquipped Function Details: {str(cur_function)}\nOutput suitable values for the input parameters of the Equipped Function to fulfil Current Subtask''',
-                         output_format = input_format,
-                         provide_function_list = False)
-            
-            res["Equipped Function Input"] = res2
+            else:    
+                res2 = self.query(query = f'''{background_info}{rag_info}Current Subtask: {res["Next Step"]}\nEquipped Function Name: {res["Equipped Function"]}\nEquipped Function Details: {str(cur_function)}\nOutput suitable values for the input parameters of the Equipped Function to fulfil Current Subtask''',
+                             output_format = input_format,
+                             provide_function_list = False)
+                res["Equipped Function Input"] = res2
 
         ## End Task Overrides
         # if the next step is already done before, then end the task. Unless it is in OS mode, then allow it
@@ -489,8 +546,8 @@ class Agent:
 
     def run(self, task: str = '', overall_task: str = '', num_subtasks: int = 0) -> list:
         ''' Attempts to do the task using LLM and available functions
-        Loops through and performs either a function call or LLM call up to max_steps number of times
-        If overall_task is filled, then we store it to pass to the inner agents for more context'''
+        Loops through and performs either a function call or LLM call up to num_subtasks number of times
+        If overall_task is filled, then we store it to pass to the inner agents for more context '''
             
         # Assign the task
         if task != '':
