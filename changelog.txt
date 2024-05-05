@@ -1,3 +1,9 @@
+5 May 2024 (v4.1.0)
+- Changed prompt of strict_json to make it compatible with more LLMs and improve performance on ChatGPT: 
+    '''\nOutput in the following json string format: {new_output_format}
+    Update text enclosed in <>. Output only a valid json string beginning with {{ and ending with }}'''
+- Added more external LLM examples in Tutorial
+
 22 Apr 2024 (v4.0.1)
 - Changed StrictJSON prompt to make it better: Added "You must output valid json with all keys present." to system prompt of `strict_json` to make it more robust
 - Modified openai>=1.3.6 to requirements.txt so that it is compatible with newer versions of LangChain

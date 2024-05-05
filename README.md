@@ -1,4 +1,4 @@
-# Strict JSON v4.0.1
+# Strict JSON v4.1.0
 [UPDATE]: For Agentic Framework, do check out TaskGen (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
 - https://github.com/simbianai/taskgen
 
@@ -254,7 +254,7 @@ res = strict_json(system_prompt = 'You are a classifier',
                     user_prompt = 'It is a beautiful and sunny day',
                     output_format = {'Sentiment': ['Type of Sentiment', 
                                                    'Strength of Sentiment, type: Enum[1, 2, 3, 4, 5]'],
-                                    'Adjectives': "Name and Description, type: List[Dict['Name', 'Description']]",
+                                    'Adjectives': "Name and Description as separate keys, type: List[Dict['Name', 'Description']]",
                                     'Words': {
                                         'Number of words': 'Word count', 
                                         'Language': {

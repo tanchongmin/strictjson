@@ -118,7 +118,7 @@ class Memory:
         
     def remove(self, memory_to_remove):
         ''' Removes a memory '''
-        self.memory.remove(new_memory)
+        self.memory.remove(memory_to_remove)
         
     def reset(self):
         ''' Clears all memory '''
@@ -260,10 +260,10 @@ class Agent:
                 if function.is_compulsory:
                     filtered_fn_list.append(function)
                 
-        # add in additional context to the prompt
+        # add in global context to the prompt
         global_context = ''
         if self.get_global_context is not None:
-            global_context = 'Additional Context:' + self.get_global_context(self) + '\n'
+            global_context = 'Global Context:' + self.get_global_context(self) + '\n'
         
         system_prompt = f"You are an agent named {self.agent_name} with the following description: ```{self.agent_description}```\n"
         if provide_function_list:
@@ -381,10 +381,10 @@ class Agent:
                 rag_info += f'Related {name}: ```{self.memory_bank[name].retrieve(subtask)}```\n'
 
             res = self.query(query = f'{rag_info}Overall Task:```{self.overall_task}```\nContext:```{self.subtasks_completed}```\nAssigned Subtask: ```{function_params["instruction"]}```\nPerform the Assigned Subtask only - do not just state what has or can be done - actually generate the outcome of Assigned Subtask fully but only within your Agent Capabilities', 
-                            output_format = {"Assigned Subtask Outcome": "Generate a full response to the Assigned Subtask"},
+                            output_format = {"Output": "Generate a full response to the Assigned Subtask"},
                             provide_function_list = False)
             
-            res = res["Assigned Subtask Outcome"]
+            res = res["Output"]
             
             if self.verbose: 
                 print('>', res)
@@ -423,7 +423,7 @@ class Agent:
         else:
             background_info = f"Assigned Task:```{task}```\n"
                 
-        # only add overall plan if there is and not evaluasting for single task
+        # only add overall plan if there is and not evaluating for single task
         if task == '':
             task = ', '.join(self.overall_plan) if self.overall_plan is not None else task
         task = self.task if task == '' else task
