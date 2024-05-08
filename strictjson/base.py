@@ -367,6 +367,58 @@ def chat(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5-turbo', tem
             
     return res
 
+
+async def chat_async(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5-turbo', temperature: float = 0, verbose: bool = False, host: str = 'openai', llm_async = None, **kwargs):
+    '''Performs a chat with the host's LLM model with system prompt, user prompt, model, verbose and kwargs
+    Returns the output string res
+    - system_prompt: String. Write in whatever you want the LLM to become. e.g. "You are a \<purpose in life\>"
+    - user_prompt: String. The user input. Later, when we use it as a function, this is the function input
+    - model: String. The LLM model to use for json generation
+    - verbose: Boolean (default: False). Whether or not to print out the system prompt, user prompt, GPT response
+    - host: String. The provider of the LLM
+    - llm: User-made llm function.
+        - Inputs:
+            - system_prompt: String. Write in whatever you want the LLM to become. e.g. "You are a \<purpose in life\>"
+            - user_prompt: String. The user input. Later, when we use it as a function, this is the function input
+        - Output:
+            - res: String. The response of the LLM call
+    - **kwargs: Dict. Additional arguments for LLM chat
+    
+    TODO: Incorporate other open-sourced LLMs in the future'''
+    if llm_async is not None:
+        ''' If you specified your own LLM, then we just feed in the system and user prompt 
+        LLM function should take in system prompt (str) and user prompt (str), and output a response (str) '''
+        res = await llm_async(system_prompt = system_prompt, user_prompt = user_prompt)
+    
+    ## This part here is for llms that are OpenAI based
+    elif host == 'openai':
+        # additional checks for openai json mode
+        if 'response_format' in kwargs and kwargs['response_format'] == {"type": "json_object"}:
+            # if model fails, default to gpt-3.5-turbo-1106
+            try:
+                assert(model in ['gpt-4-1106-preview', 'gpt-3.5-turbo-1106'])
+            except Exception as e:
+                model = 'gpt-3.5-turbo-1106'
+                
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model=model,
+            temperature = temperature,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            **kwargs
+        )
+        res = response.choices[0].message.content
+
+    if verbose:
+        print('System prompt:', system_prompt)
+        print('\nUser prompt:', user_prompt)
+        print('\nGPT response:', res)
+            
+    return res
+
 def get_fn_description(my_function) -> (str, list):
     ''' Returns the modified docstring of my_function, that takes into account input variable names and types in angle brackets
     Also returns the list of input parameters to the function in sequence
@@ -522,6 +574,110 @@ Update text enclosed in <>. Output only a valid json string beginning with {{ an
                 print("Current invalid json format:", res)
 
         return {}
+    
+    
+async def strict_json_async(system_prompt: str, user_prompt: str, output_format: dict, return_as_json = False, custom_checks: dict = dict(), check_data = None, delimiter: str = '###', num_tries: int = 3, openai_json_mode: bool = False, **kwargs):
+    ''' Ensures that OpenAI will always adhere to the desired output JSON format defined in output_format. 
+    Uses rule-based iterative feedback to ask GPT to self-correct.
+    Keeps trying up to num_tries it it does not. Returns empty JSON if unable to after num_tries iterations.
+    
+    Inputs (compulsory):
+    - system_prompt: String. Write in whatever you want GPT to become. e.g. "You are a \<purpose in life\>"
+    - user_prompt: String. The user input. Later, when we use it as a function, this is the function input
+    - output_format: Dict. JSON format with the key as the output key, and the value as the output description
+    
+    Inputs (optional):
+    - return_as_json: Bool. Default: False. Whether to return the output as a json. If False, returns as Python dict. If True, returns as json string
+    - custom_checks: Dict. Key is output key, value is function which does checking of content for output field
+    - check_data: Any data type. The additional data for custom_checks to use if required
+    - delimiter: String (Default: '###'). This is the delimiter to surround the keys. With delimiter ###, key becomes ###key###
+    - num_tries: Integer (default: 3). The number of tries to iteratively prompt GPT to generate correct json format
+    - openai_json_mode: Boolean (default: False). Whether or not to use OpenAI JSON Mode
+    - **kwargs: Dict. Additional arguments for LLM chat
+    
+    Output:
+    - res: Dict. The JSON output of the model. Returns {} if JSON parsing failed.
+    '''
+    # If OpenAI JSON mode is selected, then just let OpenAI do the processing
+    if openai_json_mode:
+        # add in code to warn user if type is defined for external function
+        type_check = False
+        for value in output_format.values():
+            if 'type:' in str(value):
+                type_check = True
+        if type_check:
+            print('Note: Type checking (type:) not done for OpenAI JSON Mode')
+        
+        output_format_prompt = "\nOutput in the following json string format: " + str(output_format) + "\nBe concise."
+            
+        my_system_prompt = str(system_prompt) + output_format_prompt
+        my_user_prompt = str(user_prompt) 
+            
+        res = await chat_async(my_system_prompt, my_user_prompt, response_format = {"type": "json_object"}, **kwargs)
+        
+        if return_as_json:
+            return res
+        else:
+            try:
+                loaded_json = json.loads(res)
+            except Exception as e:
+                loaded_json = {}
+            return loaded_json
+        
+    # Otherwise, implement JSON parsing using Strict JSON
+    else:
+        # start off with no error message
+        error_msg = ''
+
+        # wrap the values with angle brackets and wrap keys with delimiter to encourage LLM to modify it
+        new_output_format = wrap_with_angle_brackets(output_format, delimiter, 1)
+        
+        output_format_prompt = f'''\nOutput in the following json string format: {new_output_format}
+Update text enclosed in <>. Output only a valid json string beginning with {{ and ending with }}'''
+
+        for i in range(num_tries):
+            my_system_prompt = str(system_prompt) + output_format_prompt + error_msg
+            my_user_prompt = str(user_prompt) 
+
+            # Use OpenAI to get a response
+            res = chat(my_system_prompt, my_user_prompt, **kwargs)
+            
+            # extract only the chunk including the opening and closing braces
+            startindex = res.find('{')
+            endindex = res.rfind('}')
+            res = res[startindex: endindex+1]
+
+            # try-catch block to ensure output format is adhered to
+            try:
+                # check that res is a json string
+                if res[0] != '{' or res[-1] != '}':
+                    raise Exception('Ensure output must be a json string beginning with { and ending with }')
+                
+                # do checks for keys and output format, remove escape characters so code can be run
+                end_dict = check_key(res, output_format, new_output_format, delimiter, delimiter_num = 1, **kwargs)
+                
+                # run user defined custom checks now
+                for key in end_dict:
+                    if key in custom_checks:
+                        for check in custom_checks[key]:
+                            requirement, requirement_met, action_needed = check(end_dict[key], check_data)
+                            print(f'Running check for "{requirement}" on output field of "{key}"')
+                            if not requirement_met:
+                                print(f'Requirement not met. Action needed: "{action_needed}"\n\n')
+                                raise Exception(f'Output field of "{key}" does not meet requirement "{requirement}". Action needed: "{action_needed}"')
+                            else:
+                                print('Requirement met\n\n')
+                if return_as_json:
+                    return json.dumps(end_dict, ensure_ascii=False)
+                else:
+                    return end_dict
+
+            except Exception as e:
+                error_msg = f"\n\nPrevious json: {res}\njson error: {str(e)}\nFix the error."                
+                print("An exception occurred:", str(e))
+                print("Current invalid json format:", res)
+
+        return {}
 
 class Function:
     def __init__(self,
@@ -532,6 +688,7 @@ class Function:
                  is_compulsory = False,
                  fn_name = None,
                  llm = None,
+                 llm_async = None,
                  **kwargs):
         ''' 
         Creates an LLM-based function or wraps an external function using fn_description and outputs JSON based on output_format. 
@@ -586,6 +743,7 @@ Can also be done automatically by providing docstring with input variable names 
         self.is_compulsory = is_compulsory
         self.fn_name = fn_name
         self.llm = llm
+        self.llm_async = llm_async
         self.kwargs = kwargs
         
         self.variable_names = []
@@ -634,6 +792,7 @@ Can also be done automatically by providing docstring with input variable names 
         ''' Prints out the function's parameters '''
         return f'Description: {self.fn_description}\nInput: {self.variable_names}\nOutput: {self.output_format}\n'
         
+        # TODO Need aync version of this calling strictjson async
     def __call__(self, *args, **kwargs):
         ''' Describes the function, and inputs the relevant parameters as either unnamed variables (args) or named variables (kwargs)
         
