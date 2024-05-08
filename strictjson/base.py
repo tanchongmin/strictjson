@@ -792,7 +792,6 @@ Can also be done automatically by providing docstring with input variable names 
         ''' Prints out the function's parameters '''
         return f'Description: {self.fn_description}\nInput: {self.variable_names}\nOutput: {self.output_format}\n'
         
-        # TODO Need aync version of this calling strictjson async
     def __call__(self, *args, **kwargs):
         ''' Describes the function, and inputs the relevant parameters as either unnamed variables (args) or named variables (kwargs)
         
@@ -833,6 +832,82 @@ Can also be done automatically by providing docstring with input variable names 
                             user_prompt = function_kwargs,
                             output_format = self.output_format,
                             llm = self.llm,
+                            **self.kwargs, **strict_json_kwargs)
+            
+        # Else run the external function
+        else:
+            res = {}
+            # if external function uses shared_variables, pass it in
+            argspec = inspect.getfullargspec(self.external_fn)
+            if 'shared_variables' in argspec.args:
+                fn_output = self.external_fn(shared_variables = shared_variables, **function_kwargs)
+            else:
+                fn_output = self.external_fn(**function_kwargs)
+                
+            # if there is nothing in fn_output, skip this part
+            if fn_output is not None:
+                output_keys = list(self.output_format.keys())
+                # convert the external function into a tuple format to parse it through the JSON dictionary output format
+                if not isinstance(fn_output, tuple):
+                    fn_output = [fn_output]
+
+                for i in range(len(fn_output)):
+                    res[output_keys[i]] = fn_output[i]
+        
+        # check if any of the output variables have a s_, which means we update the shared_variables and not output it
+        keys = list(res.keys())
+        for each in keys:
+            if each[:2] == 's_':
+                shared_variables[each] = res[each]
+                del res[each]
+                
+        if res == {}:
+            res = {'Status': 'Completed'}
+
+        return res
+    
+    
+    
+    async def async_call(self, *args, **kwargs):
+        ''' Describes the function, and inputs the relevant parameters as either unnamed variables (args) or named variables (kwargs)
+        
+        Inputs:
+        - shared_varables: Dict. Default: empty dict. The variables which will be shared between functions. Only passed in if required by function 
+        - *args: Tuple. Unnamed input variables of the function. Will be processed to var1, var2 and so on based on order in the tuple
+        - **kwargs: Dict. Named input variables of the function. Can also be variables to pass into strict_json
+        
+        Output:
+        - res: Dict. JSON containing the output variables'''
+        
+        # get the shared_variables if there are any
+        shared_variables = kwargs.get('shared_variables', {})
+        # remove the mention of shared_variables in kwargs
+        if 'shared_variables' in kwargs:
+            del kwargs['shared_variables']
+        
+        # extract out only variables listed in variable_list from kwargs
+        function_kwargs = {my_key: kwargs[my_key] for my_key in kwargs if my_key in self.variable_names}
+        # additionally, if function references something in shared_variables, add that in
+        for variable in self.shared_variable_names:
+            if variable in shared_variables:
+                function_kwargs[variable] = shared_variables[variable]
+        
+        # extract out only variables not listed in variable list
+        strict_json_kwargs = {my_key: kwargs[my_key] for my_key in kwargs if my_key not in self.variable_names}
+        
+        # Do the auto-naming of variables as var1, var2, or as variable names defined in variable_names
+        for num, arg in enumerate(args):
+            if len(self.variable_names) > num:
+                function_kwargs[self.variable_names[num]] = arg
+            else:
+                function_kwargs['var'+str(num+1)] = arg
+                
+        # If strict_json function, do the function. 
+        if self.external_fn is None:
+            res = await strict_json_async(system_prompt = self.fn_description,
+                            user_prompt = function_kwargs,
+                            output_format = self.output_format,
+                            llm_async = self.llm_async,
                             **self.kwargs, **strict_json_kwargs)
             
         # Else run the external function
