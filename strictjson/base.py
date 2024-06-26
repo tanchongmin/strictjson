@@ -638,7 +638,7 @@ Update text enclosed in <>. Output only a valid json string beginning with {{ an
             my_user_prompt = str(user_prompt) 
 
             # Use OpenAI to get a response
-            res = chat(my_system_prompt, my_user_prompt, **kwargs)
+            res = await chat_async(my_system_prompt, my_user_prompt, **kwargs)
             
             # extract only the chunk including the opening and closing braces
             startindex = res.find('{')
