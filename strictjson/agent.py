@@ -1,6 +1,4 @@
 import heapq
-import openai
-from openai import OpenAI
 import numpy as np
 import copy
 import dill as pickle
@@ -42,6 +40,7 @@ class Ranker:
      
         # defaults to OpenAI if ranking_fn is not provided
         if self.ranking_fn is None:
+            from openai import OpenAI
             client = OpenAI()
             if query in self.database:
                 query_embedding = self.database[query]

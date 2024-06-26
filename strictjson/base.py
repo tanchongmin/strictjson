@@ -1,12 +1,8 @@
-import os
-import openai
 import json
 import re
 import ast
-import copy
 import inspect
 from typing import get_type_hints
-from openai import OpenAI
 
 ### Helper Functions ###
 
@@ -347,7 +343,8 @@ def chat(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5-turbo', tem
                 assert(model in ['gpt-4-1106-preview', 'gpt-3.5-turbo-1106'])
             except Exception as e:
                 model = 'gpt-3.5-turbo-1106'
-                
+
+        from openai import OpenAI
         client = OpenAI()
         response = client.chat.completions.create(
             model=model,
@@ -399,7 +396,8 @@ async def chat_async(system_prompt: str, user_prompt: str, model: str = 'gpt-3.5
                 assert(model in ['gpt-4-1106-preview', 'gpt-3.5-turbo-1106'])
             except Exception as e:
                 model = 'gpt-3.5-turbo-1106'
-                
+
+        from openai import OpenAI
         client = OpenAI()
         response = client.chat.completions.create(
             model=model,
