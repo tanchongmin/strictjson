@@ -13,6 +13,7 @@ You can also treat StrictJSON repo as the stable repo, as changes will only be u
 - Easy construction of LLM-based functions using ```Function``` (Note: renamed from `strict_function` to keep in line with naming convention of capitalised class groups. `strict_function` still works for legacy support.)
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
+- `AsyncFunction` and `strict_json_async` for async (and faster) processing
 
 ### Tutorials and Community Support
 - Created: 7 Apr 2023
