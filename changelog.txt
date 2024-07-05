@@ -1,3 +1,15 @@
+5 Jul 2024 (v5.0.0)
+- HUGE: Async support added. Added async_chat, async_strict_json, FunctionAsync
+- Changed prompt of strict_json to make it compatible with more LLMs: 
+    '''\nOutput using the following json template: {new_output_format}
+Update values enclosed in <> and remove the <>. 
+Output only a valid json beginning with {{ and ending with }} and ensure that the following keys are present: {list(new_output_format.keys())}'''
+- `Function()` now allows just automatically inferring the `fn_description` and `output_format` from external function, using `Function(external_fn = fn)`
+- By default, strictjson will not decode for all unicode escapes, just \\t, \\n, \\' and \\". Using type: code will do for all unicode escapes
+- type: code now converts python```code``` -> code, which makes it more versatile for LLM code generation
+- Added in dependencies: langchain, PyPDF2, python-docx, pandas, xlrd. These are for document processing in memory for TaskGen (but added to also provide features of TaskGen repo)
+- Edited the `convert_to_dict` function in `base.py` to make it more robust to variations of incorrect keys, edited error message for incorrect key to make it more robust
+
 5 May 2024 (v4.1.0)
 - Changed prompt of strict_json to make it compatible with more LLMs and improve performance on ChatGPT: 
     '''\nOutput in the following json string format: {new_output_format}
