@@ -32,13 +32,33 @@ You can also treat StrictJSON repo as the stable repo, as changes will only be u
 - Ensures that all JSON fields are output by LLM, with optional type checking, if not it will feed in error message to LLM to iteratively correct its generation (default: 3 tries)
 
 # Features:
-## 1. Basic Generation
+# 1. Basic Generation
 
 - **system_prompt**: Write in whatever you want the LLM to become. "You are a \<purpose in life\>"
 - **user_prompt**: The user input. Later, when we use it as a function, this is the function input
 - **output_format**: JSON of output variables in a dictionary, with the key as the output key, and the value as the output description
     - The output keys will be preserved exactly, while the LLM will generate content to match the description of the value as best as possible
 - **llm**: The llm you want to use. Takes in `system_prompt` and `user_prompt` and outputs the LLM-generated string
+
+#### Example LLM Definition
+```python
+def llm(system_prompt: str, user_prompt: str) -> str:
+    ''' Here, we use OpenAI for illustration, you can change it to your own LLM '''
+    # ensure your LLM imports are all within this function
+    from openai import OpenAI
+    
+    # define your own LLM here
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model='gpt-3.5-turbo',
+        temperature = 0,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    )
+    return response.choices[0].message.content
+```
 
 #### Example Usage
 ```python
@@ -305,3 +325,66 @@ print(res)
 `     'Proper Words': True}`
     
 `}`
+
+## 7. Return as JSON
+- By default, `strict_json` returns a Python Dictionary
+- If needed to parse as JSON, simply set `return_as_json=True`
+- By default, this is set to `False` in order to return a Python Dictionry
+
+## 8. Async Mode
+
+- `AsyncFunction` and `strict_json_async`
+    - These are the async equivalents of `Function` and `strict_json`
+    - You will need to define an LLM that can operate in async mode
+    - Everything is the same as the sync version of the functions, except you use the `await` keyword when calling `AsyncFunction` and `strict_json_async`
+    
+    
+- Using Async can help do parallel processes simulataneously, resulting in a much faster workflow
+
+#### Example LLM in Async Mode
+```python
+async def llm_async(system_prompt: str, user_prompt: str):
+    ''' Here, we use OpenAI for illustration, you can change it to your own LLM '''
+    # ensure your LLM imports are all within this function
+    from openai import AsyncOpenAI
+    
+    # define your own LLM here
+    client = AsyncOpenAI()
+    response = await client.chat.completions.create(
+        model='gpt-3.5-turbo',
+        temperature = 0,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    )
+    return response.choices[0].message.content
+```
+
+#### Example Input (strict_json_async)
+```python
+res = await strict_json_async(system_prompt = 'You are a classifier',
+                    user_prompt = 'It is a beautiful and sunny day',
+                    output_format = {'Sentiment': 'Type of Sentiment',
+                                    'Adjectives': 'Array of adjectives',
+                                    'Words': 'Number of words'},
+                                     llm = llm_async) # set this to your own LLM
+
+print(res)
+```
+
+#### Example Output
+`{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}`
+
+#### Example Input (AsyncFunction)
+```python
+fn =  AsyncFunction(fn_description = 'Output a sentence with <obj> and <entity> in the style of <emotion>', 
+                     output_format = {'output': 'sentence'})
+
+res = await fn('ball', 'dog', 'happy') #obj, entity, emotion
+
+print(res)
+```
+
+#### Example Output
+`{'output': 'The dog happily chased the ball.'}`
