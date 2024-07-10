@@ -381,7 +381,8 @@ print(res)
 #### Example Input (AsyncFunction)
 ```python
 fn =  AsyncFunction(fn_description = 'Output a sentence with <obj> and <entity> in the style of <emotion>', 
-                     output_format = {'output': 'sentence'})
+                     output_format = {'output': 'sentence'},
+                     llm = llm_async) # set this to your own LLM
 
 res = await fn('ball', 'dog', 'happy') #obj, entity, emotion
 
