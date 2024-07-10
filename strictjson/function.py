@@ -364,28 +364,24 @@ class AsyncFunction(BaseFunction):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         ensure_awaitable(self.llm, 'llm')
-        self.__name__ = self.fn_name
-        
-    async def async_init(self): 
         if self.fn_name is None:
             # if external function has a name, use it
             if self.external_fn is not None and hasattr(self.external_fn, '__name__') and self.external_fn.__name__ != '<lambda>':
                 self.fn_name = self.external_fn.__name__
-            # otherwise, generate name out
-            else:
-                res = await strict_json_async(system_prompt = "Output a function name to summarise the usage of this function.",
-                                  user_prompt = str(self.fn_description),
-                                  output_format = {"Thoughts": "What function does", "Name": "Function name with _ separating words that summarises what function does"},
-                                 llm = self.llm,
-                                 **self.kwargs)
-                self.fn_name = res['Name']
-        
-        # change instance's name to function's name
         self.__name__ = self.fn_name
         
-        
-        
-      
+    async def async_init(self): 
+        ''' This generates the name for the function using strict_json_async '''
+        if self.fn_name is None:
+            res = await strict_json_async(system_prompt = "Output a function name to summarise the usage of this function.",
+                              user_prompt = str(self.fn_description),
+                              output_format = {"Thoughts": "What function does", "Name": "Function name with _ separating words that summarises what function does"},
+                             llm = self.llm,
+                             **self.kwargs)
+            self.fn_name = res['Name']
+
+            # change instance's name to function's name
+            self.__name__ = self.fn_name
         
     async def __call__(self, *args, **kwargs):
         ''' Describes the function, and inputs the relevant parameters as either unnamed variables (args) or named variables (kwargs)

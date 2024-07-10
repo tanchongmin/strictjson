@@ -85,7 +85,7 @@ output_format = {"Thoughts": f"How to reply",
         
         ## Update Persistent Memory
         if self.persistent_memory is not None and self.persistent_memory != {}:
-            persistent_memory = strict_json(f'Update all fields of Persistent Memory based on information in Additional Conversation. Current value: {self.agent.shared_variables["Persistent Memory"]}',
+            persistent_memory = strict_json(f'Update all fields of Persistent Memory based on information in Additional Conversation. Current value: ```{self.agent.shared_variables["Persistent Memory"]}```',
                f'Additional Conversation\n{self.person}: {cur_msg}\n{self.agent.agent_name}: {res[f"Reply to {self.person}"]}',
                output_format = self.persistent_memory,
                model = self.agent.kwargs.get('model', 'gpt-3.5-turbo'),

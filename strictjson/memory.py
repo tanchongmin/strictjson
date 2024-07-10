@@ -3,6 +3,8 @@ import PyPDF2
 from docx import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+import copy
+
 import pandas as pd
 from strictjson.base import strict_json
 from strictjson.base_async import strict_json_async
@@ -21,6 +23,7 @@ class BaseMemory:
         - `approach`: str. Either `retrieve_by_ranker` or `retrieve_by_llm` to retrieve memory items
             - Ranker is faster and cheaper as it compares via embeddings, but are inferior to LLM-based methods for contextual information
         - `llm`: Function. The llm to use for `strict_json` llm retriever
+        - `retrieve_fn`: Default: None. Takes in task and outputs top_k similar memories in a list
         - `ranker`: `Ranker`. The Ranker which defines a similarity score between a query and a key. Default: OpenAI `text-embedding-3-small` model. 
             - Can be replaced with a function which returns similarity score from 0 to 1 when given a query and key
      '''
@@ -107,7 +110,6 @@ class BaseMemory:
         return f"Memory(memory={self.memory if include_memory_elements else []}, top_k={self.top_k}, mapper={get_source_code_for_func(self.mapper)}, approach='{self.approach}', ranker={self.ranker.get_python_representation() if hasattr(self.ranker, 'get_python_representation') else 'None'})"
 
 class Memory(BaseMemory):
-    
     ''' Retrieves top k memory items based on task 
     - Inputs:
         - `memory`: List. Default: Empty List. The list containing the memory items
@@ -117,6 +119,7 @@ class Memory(BaseMemory):
         - `approach`: str. Either `retrieve_by_ranker` or `retrieve_by_llm` to retrieve memory items
             - Ranker is faster and cheaper as it compares via embeddings, but are inferior to LLM-based methods for contextual information
         - `llm`: Function. The llm to use for `strict_json` llm retriever
+        - `retrieve_fn`: Default: None. Takes in task and outputs top_k similar memories in a list
         - `ranker`: `Ranker`. The Ranker which defines a similarity score between a query and a key. Default: OpenAI `text-embedding-3-small` model. 
             - Can be replaced with a function which returns similarity score from 0 to 1 when given a query and key
      '''
@@ -139,14 +142,20 @@ class Memory(BaseMemory):
     def retrieve_by_ranker(self, task: str) -> list:
         ''' Performs retrieval of top_k similar memories 
         Returns the memory list items corresponding to top_k matches '''
-        memory_score = [self.ranker(self.mapper(memory_chunk), task) for memory_chunk in self.memory]
-        top_k_indices = top_k_index(memory_score, self.top_k)
-        return [self.memory[index] for index in top_k_indices]
+        # if there is no need to filter because top_k is already more or equal to memory size, just return memory
+        if self.top_k >= len(self.memory):
+            return copy.deepcopy(self.memory)
+        
+        # otherwise, perform filtering
+        else:
+            memory_score = [self.ranker(self.mapper(memory_chunk), task) for memory_chunk in self.memory]
+            top_k_indices = top_k_index(memory_score, self.top_k)
+            return [self.memory[index] for index in top_k_indices]
     
     def retrieve_by_llm(self, task: str) -> list:
         ''' Performs retrieval via LLMs 
         Returns the key list as well as the value list '''
-        res = strict_json(f'You are to output the top {self.top_k} most similar list items in Memory that meet this description: {task}\nMemory: {[f"{i}. {self.mapper(mem)}" for i, mem in enumerate(self.memory)]}', '', 
+        res = strict_json(f'You are to output the top {self.top_k} most similar list items in Memory relevant to this: ```{task}```\nMemory: {[f"{i}. {self.mapper(mem)}" for i, mem in enumerate(self.memory)]}', '', 
               output_format = {f"top_{self.top_k}_list": f"Indices of top {self.top_k} most similar list items in Memory, type: list[int]"},
               llm = self.llm)
         top_k_indices = res[f'top_{self.top_k}_list']
@@ -164,6 +173,7 @@ class AsyncMemory(BaseMemory):
         - `approach`: str. Either `retrieve_by_ranker` or `retrieve_by_llm` to retrieve memory items
             - Ranker is faster and cheaper as it compares via embeddings, but are inferior to LLM-based methods for contextual information
         - `llm`: Function. The llm to use for `strict_json` llm retriever
+        - `retrieve_fn`: Default: None. Takes in task and outputs top_k similar memories in a list
         - `ranker`: `Ranker`. The Ranker which defines a similarity score between a query and a key. Default: OpenAI `text-embedding-3-small` model. 
             - Can be replaced with a function which returns similarity score from 0 to 1 when given a query and key
      '''
@@ -191,15 +201,21 @@ class AsyncMemory(BaseMemory):
     async def retrieve_by_ranker(self, task: str) -> list:
         ''' Performs retrieval of top_k similar memories 
         Returns the memory list items corresponding to top_k matches '''
-        tasks = [self.ranker(self.mapper(memory_chunk), task) for memory_chunk in self.memory]
-        memory_score = await asyncio.gather(*tasks)
-        top_k_indices = top_k_index(memory_score, self.top_k)
-        return [self.memory[index] for index in top_k_indices]
+                # if there is no need to filter because top_k is already more or equal to memory size, just return memory
+        if self.top_k >= len(self.memory):
+            return copy.deepcopy(self.memory)
+        
+        # otherwise, perform filtering
+        else:
+            tasks = [self.ranker(self.mapper(memory_chunk), task) for memory_chunk in self.memory]
+            memory_score = await asyncio.gather(*tasks)
+            top_k_indices = top_k_index(memory_score, self.top_k)
+            return [self.memory[index] for index in top_k_indices]
     
     async def retrieve_by_llm(self, task: str) -> list:
         ''' Performs retrieval via LLMs 
         Returns the key list as well as the value list '''
-        res = await strict_json_async(f'You are to output the top {self.top_k} most similar list items in Memory that meet this description: {task}\nMemory: {[f"{i}. {self.mapper(mem)}" for i, mem in enumerate(self.memory)]}', '', 
+        res = await strict_json_async(f'You are to output the top {self.top_k} most similar list items in Memory relevant to this: ```{task}```\nMemory: {[f"{i}. {self.mapper(mem)}" for i, mem in enumerate(self.memory)]}', '', 
               output_format = {f"top_{self.top_k}_list": f"Indices of top {self.top_k} most similar list items in Memory, type: list[int]"},
               llm = self.llm)
         top_k_indices = res[f'top_{self.top_k}_list']

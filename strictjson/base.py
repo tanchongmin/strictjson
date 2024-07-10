@@ -481,9 +481,10 @@ def strict_json(system_prompt: str, user_prompt: str, output_format: dict, retur
         # wrap the values with angle brackets and wrap keys with delimiter to encourage LLM to modify it
         new_output_format = wrap_with_angle_brackets(output_format, delimiter, 1)
         
-        output_format_prompt = f'''\nOutput using the following json template: {new_output_format}
+        output_format_prompt = f'''\nOutput in the following json template: ```{new_output_format}```
 Update values enclosed in <> and remove the <>. 
-Output only a valid json beginning with {{ and ending with }} and ensure that the following keys are present: {list(new_output_format.keys())}'''
+Your response must only be the updated json template beginning with {{ and ending with }}
+Ensure the following output keys are present in the json: {list(new_output_format.keys())}'''
 
         for i in range(num_tries):
             my_system_prompt = str(system_prompt) + output_format_prompt + error_msg

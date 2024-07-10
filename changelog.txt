@@ -1,3 +1,11 @@
+10 Jul 2024 (v5.1.0)
+- Updated strict_json prompt to be f'''\nOutput in the following json template: ```{new_output_format}```
+Update values enclosed in <> and remove the <>. 
+Your response must only be the updated json template beginning with {{ and ending with }}
+Ensure the following output keys are present in the json: {list(new_output_format.keys())}'''
+This will help smaller models like Llama 3 8B generate more reliably.
+- Amended the Tutorial to fix some issues where llm variable was not called
+
 5 Jul 2024 (v5.0.0)
 - HUGE: Async support added. Added async_chat, async_strict_json, FunctionAsync
 - Changed prompt of strict_json to make it compatible with more LLMs: 

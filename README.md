@@ -1,4 +1,4 @@
-# Strict JSON v5.0.0
+# Strict JSON v5.1.0
 [UPDATE]: For Agentic Framework and for latest updates to StrictJSON, do check out TaskGen (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
 - https://github.com/simbianai/taskgen
 
@@ -257,7 +257,8 @@ def binary_to_decimal(x):
 # an external function with a single output variable, with an expressive variable description
 fn = Function(fn_description = 'Convert input <x: a binary number in base 2> to base 10', 
             output_format = {'output1': 'x in base 10'},
-            external_fn = binary_to_decimal)
+            external_fn = binary_to_decimal,
+            llm = llm)
 
 # Use the function
 fn(10) #x
