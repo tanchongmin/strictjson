@@ -1,9 +1,4 @@
 # Strict JSON v5.1.0
-[UPDATE]: For Agentic Framework and for latest updates to StrictJSON, do check out TaskGen (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
-- https://github.com/simbianai/taskgen
-
-You can also treat StrictJSON repo as the stable repo, as changes will only be updated here after testing is done at the TaskGen repo.
-
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 
