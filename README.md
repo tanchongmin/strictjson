@@ -1,4 +1,7 @@
-# Strict JSON v5.1.0
+# Strict JSON v5.1.1
+[UPDATE]: For Agentic Framework, do check out TaskGen (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
+- https://github.com/simbianai/taskgen
+
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 
@@ -46,7 +49,7 @@ def llm(system_prompt: str, user_prompt: str) -> str:
     # define your own LLM here
     client = OpenAI()
     response = client.chat.completions.create(
-        model='gpt-3.5-turbo',
+        model='gpt-4o-mini',
         temperature = 0,
         messages=[
             {"role": "system", "content": system_prompt},
@@ -348,7 +351,7 @@ async def llm_async(system_prompt: str, user_prompt: str):
     # define your own LLM here
     client = AsyncOpenAI()
     response = await client.chat.completions.create(
-        model='gpt-3.5-turbo',
+        model='gpt-4o-mini',
         temperature = 0,
         messages=[
             {"role": "system", "content": system_prompt},

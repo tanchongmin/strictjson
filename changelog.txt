@@ -1,3 +1,14 @@
+25 Jul 2024 (v5.1.1)
+- Fixed a missing filter for strict_json_async to get only the text within {} for json
+- For strict_json, changed the output to be f'''\nOutput in the following json template: ```{new_output_format}```
+Update values enclosed in <> and remove the <>. 
+Your response must only be the updated json template beginning with {{ and ending with }}
+Ensure the following output keys are present in the json: {' '.join(list(new_output_format.keys()))}'''
+
+This helps by changing ['###key###'] into ###key### , which helps Llama 3 8B better understand how to format the json
+
+- Changed all default model parameters in Tutorial Notebooks and code to be 'gpt-4o-mini' instead of 'gpt-3.5-turbo' for cheaper and better performance
+
 10 Jul 2024 (v5.1.0)
 - Updated strict_json prompt to be f'''\nOutput in the following json template: ```{new_output_format}```
 Update values enclosed in <> and remove the <>. 

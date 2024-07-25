@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "strictjson"
-version = "5.1.0"
+version = "5.1.1"
 authors = [
   { name="John Tan Chong Min", email="tanchongmin@gmail.com" },
 ]
