@@ -133,7 +133,7 @@ print(res)
 ```python
 res = strict_json(system_prompt = 'You are an expert at organising birthday parties',
                     user_prompt = 'Give me some information on how to organise a birthday',
-                    output_format = {'Famous Quote about Age': 'quote with name, type: ensure quote contains the word age',
+                    output_format = {'Famous Quote about Age': 'type: ensure quote contains the word age',
                                     'Lucky draw numbers': '3 numbers from 1-50, type: List[int]',
                                     'Sample venues': 'Describe two venues, type: List[Dict["Venue", "Description"]]'},
                     llm = llm)
