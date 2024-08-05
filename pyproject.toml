@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "strictjson"
-version = "5.1.2"
+version = "5.1.3"
 authors = [
   { name="John Tan Chong Min", email="tanchongmin@gmail.com" },
 ]
@@ -16,7 +16,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = ["dill>=0.3.7", "termcolor>=2.3.0", "requests"]
+dependencies = ["asyncio"]
 
 [project.urls]
 Homepage = "https://github.com/tanchongmin/strictjson"

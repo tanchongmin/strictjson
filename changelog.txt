@@ -1,8 +1,5 @@
-5 Aug 2024 (v5.1.2)
-- Removed dependencies for TaskGen Memory module. Now only has bare minimum dependencies in requirements.txt: 
-dill>=0.3.7
-termcolor>=2.3.0
-requests
+5 Aug 2024 (v5.1.3)
+- Removed dependencies for TaskGen Memory module. Now only has one dependency in requirements.txt: asyncio
 - Removed dependencies for openai, as this will is LLM-specific
 
 25 Jul 2024 (v5.1.1)
