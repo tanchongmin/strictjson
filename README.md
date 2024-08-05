@@ -1,4 +1,4 @@
-# Strict JSON v5.1.1
+# Strict JSON v5.1.2
 [UPDATE]: For Agentic Framework, do check out TaskGen (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
 - https://github.com/simbianai/taskgen
 
