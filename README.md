@@ -1,5 +1,5 @@
 # Strict JSON v5.1.3
-[UPDATE]: For Agentic Framework, do check out TaskGen (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
+[UPDATE]: For Agentic Framework, do check out StrictJSON Agent (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
 - https://github.com/tanchongmin/strictjson-agent
 
 ### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
