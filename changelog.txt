@@ -1,3 +1,20 @@
+21 Feb 2025 (v6.0.0)
+- HUGE Update: Now comes with `parse_yaml` and `parse_yaml_async` function
+- Uses the same type checking and output_format as `strict_json`, with optional `type: ` parameter
+- Added `pydantic` to `requirements.txt`
+- # Why YAML?
+- YAML is much more concise than JSON, and avoids a lot of problems faced with quotations and brackets
+- YAML also outputs code blocks much better with multi-line literal-block scalar (|), and the code following it can be totally free of any unnecessary backslash escape characters as it is not in a string
+- LLMs now are quite good at interpreting YAML than when this repo was first started
+- # How it works
+- Parses the LLM output as a YAML, and converts it to dict
+- Uses concise `output_format` to save tokens
+- Converts `output_format` into pydantic schema automatically, and uses pydantic to validate output
+- Able to process datatypes: `int`, `float`, `str`, `bool`, `list`, `dict`, `date`, `datetime`, `time`, `UUID`, `Decimal`
+- Able to process: `None`, `Any`, `Union`, `Optional`
+- Default datatype when not specified is `Any`
+- Error correction of up to `num_tries` times (default: 3)
+
 5 Aug 2024 (v5.1.3)
 - Removed dependencies for TaskGen Memory module. Now only has one dependency in requirements.txt: asyncio
 - Removed dependencies for openai, as this will is LLM-specific

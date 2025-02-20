@@ -1,12 +1,79 @@
-# Strict JSON v5.1.3
-[UPDATE]: For Agentic Framework, do check out AgentJo (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
+# StrictJSON v6.0.0 - A Structured Output Framework for LLM Outputs
+
+## New Functionalities (see Tutorial - LLM YAML Parser.ipynb)
+#### Why YAML?
+- YAML is much more concise than JSON, and avoids a lot of problems faced with quotations and brackets
+- YAML also outputs code blocks much better with multi-line literal-block scalar (|), and the code following it can be totally free of any unnecessary backslash escape characters as it is not in a string
+- LLMs now are quite good at interpreting YAML than when this repo was first started
+
+#### How it works
+- Parses the LLM output as a YAML, and converts it to dict
+- Uses concise `output_format` to save tokens
+- Converts `output_format` into pydantic schema automatically, and uses pydantic to validate output
+- Able to process datatypes: `int`, `float`, `str`, `bool`, `list`, `dict`, `date`, `datetime`, `time`, `UUID`, `Decimal`
+- Able to process: `None`, `Any`, `Union`, `Optional`
+- Default datatype when not specified is `Any`
+- Error correction of up to `num_tries` times (default: 3)
+
+#### Example LLM Definition
+```python
+def llm(system_prompt: str, user_prompt: str) -> str:
+    ''' Here, we use OpenAI for illustration, you can change it to your own local/remote LLM '''
+    # ensure your LLM imports are all within this function
+    from openai import OpenAI
+    
+    # define your own LLM here
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model='gpt-4o-mini',
+        temperature = 0,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    )
+    return response.choices[0].message.content
+```
+
+#### Example Usage
+```python
+parse_yaml(system_prompt = "Give me 5 names on a topic", 
+           user_prompt = "weather",
+           output_format = {"Names": "Great sounding names, List[str]",
+                            "Meanings": "Name and meaning, dict", 
+                            "Chinese Meanings": "Name and meaning in chinese, dict",
+                            "Lucky Name or Number": "List[Union[int, str]]",
+                            "Code": "Python code to generate 5 names"},
+           llm = llm)
+```
+
+#### Example Output
+```
+{'Names': ['Aurora', 'Zephyr', 'Nimbus', 'Solstice', 'Tempest'],
+ 'Meanings': {'Aurora': 'Dawn',
+  'Zephyr': 'Gentle breeze',
+  'Nimbus': 'Rain cloud',
+  'Solstice': 'Sun standing still',
+  'Tempest': 'Violent storm'},
+ 'Chinese Meanings': {'Aurora': '曙光',
+  'Zephyr': '微风',
+  'Nimbus': '雨云',
+  'Solstice': '至日',
+  'Tempest': '暴风'},
+ 'Lucky Name or Number': [7, '13', 3, 'Lucky', 21],
+ 'Code': 'import random\n\ndef generate_weather_names():\n    names = ["Aurora", "Zephyr", "Nimbus", "Solstice", "Tempest"]\n    return random.sample(names, 5)\n\nprint(generate_weather_names())'}
+```
+
+---
+
+For Agentic Framework, do check out AgentJo (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
 - https://github.com/tanchongmin/agentjo
 
-### A Strict JSON Framework for LLM Outputs, that fixes problems that json.loads() cannot solve
-- Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
+---
 
 ### Base Functionalities (see Tutorial.ipynb)
 - Ensures LLM outputs into a dictionary based on a JSON format (HUGE: Nested lists and dictionaries now supported)
+- Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 - Supports `int`, `float`, `str`, `dict`, `list`, `array`, `code`, `Dict[]`, `List[]`, `Enum[]`, `bool` type forcing with LLM-based error correction, as well as LLM-based error correction using `type: ensure <restriction>`, and (advanced) custom user checks using `custom_checks`
 - Easy construction of LLM-based functions using ```Function``` (Note: renamed from `strict_function` to keep in line with naming convention of capitalised class groups. `strict_function` still works for legacy support.)
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
@@ -38,26 +105,6 @@
 - **output_format**: JSON of output variables in a dictionary, with the key as the output key, and the value as the output description
     - The output keys will be preserved exactly, while the LLM will generate content to match the description of the value as best as possible
 - **llm**: The llm you want to use. Takes in `system_prompt` and `user_prompt` and outputs the LLM-generated string
-
-#### Example LLM Definition
-```python
-def llm(system_prompt: str, user_prompt: str) -> str:
-    ''' Here, we use OpenAI for illustration, you can change it to your own LLM '''
-    # ensure your LLM imports are all within this function
-    from openai import OpenAI
-    
-    # define your own LLM here
-    client = OpenAI()
-    response = client.chat.completions.create(
-        model='gpt-4o-mini',
-        temperature = 0,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-    )
-    return response.choices[0].message.content
-```
 
 #### Example Usage
 ```python
