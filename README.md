@@ -1,12 +1,13 @@
-# StrictJSON v6.0.0 - A Structured Output Framework for LLM Outputs
+# StrictJSON v6.1.0 - A Structured Output Framework for LLM Outputs
 
-## New Functionalities (see Tutorial - LLM YAML Parser.ipynb)
+## New Functionalities (see Tutorial - parse_yaml.ipynb)
 #### Why YAML?
 - YAML is much more concise than JSON, and avoids a lot of problems faced with quotations and brackets
 - YAML also outputs code blocks much better with multi-line literal-block scalar (|), and the code following it can be totally free of any unnecessary backslash escape characters as it is not in a string
 - LLMs now are quite good at interpreting YAML than when this repo was first started
 
 #### How it works
+- See `Tutorial - parse_yaml.ipynb` for more information.
 - Parses the LLM output as a YAML, and converts it to dict
 - Uses concise `output_format` to save tokens
 - Converts `output_format` into pydantic schema automatically, and uses pydantic to validate output
@@ -14,10 +15,29 @@
 - Able to process: `None`, `Any`, `Union`, `Optional`
 - Default datatype when not specified is `Any`
 - Error correction of up to `num_tries` times (default: 3)
+- More streamlined and works for multiple models such as:
+    - Claude 3.5 Sonnet
+    - Claude 3.7 Sonnet
+    - gpt-o3-mini
+    - gpt-o1-mini
+    - gpt-4o-mini
+    - gpt-4o
+    - Meta Llama 3.3 70B
+    - Meta Llama 3.2 90B (Note: Smaller versions of Llama 3.2 do not work well with YAML)
+    - Meta Llama 3.1 70B (Note: Smaller versions of Llama 3.1 do not work well with YAML)
+    - DeepSeek-V3
+    - DeepSeek-R1
+    - QwW 32B
+    - Gemini 2.0 Flash
+    - Gemini 2.0 Flash-Lite
+
+#### Future Plans for YAML Parsing
+- Due to its versatility and better type checking with Pydantic, `parse_yaml` will now be the main focus for development
+- `strict_json` will still be around for legacy compatibility
 
 #### Example LLM Definition
 ```python
-def llm(system_prompt: str, user_prompt: str) -> str:
+def llm(system_prompt: str, user_prompt: str, **kwargs) -> str:
     ''' Here, we use OpenAI for illustration, you can change it to your own local/remote LLM '''
     # ensure your LLM imports are all within this function
     from openai import OpenAI
@@ -64,14 +84,83 @@ parse_yaml(system_prompt = "Give me 5 names on a topic",
  'Code': 'import random\n\ndef generate_weather_names():\n    names = ["Aurora", "Zephyr", "Nimbus", "Solstice", "Tempest"]\n    return random.sample(names, 5)\n\nprint(generate_weather_names())'}
 ```
 
+## (Optional) Easy interface with Structured Output parser from your favourite LLM provider!
+In the rare event `parse_yaml` fails to generate valid YAML for your use case, you can also use the Structured Output parser directly from your favourite LLM provider.
+
+#### Example LLM Definition to use Structured Outputs natively from LLM provider
+```python
+def llm(system_prompt: str, user_prompt: str, **kwargs) -> str:
+    ''' Here, we use OpenAI for illustration, you can change it to your own LLM '''
+    # ensure your LLM imports are all within this function
+    from openai import OpenAI
+
+    client = OpenAI()
+    params = {
+    "model": "gpt-4o-mini",
+    "temperature": 0,
+    "messages": [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+    }
+    
+    # Only add 'response_format' if a pydantic_model is provided.
+    if kwargs.get("pydantic_model") is not None:
+        params["response_format"] = kwargs["pydantic_model"]
+
+        print("For debugging purposes, this is the json schema for the Pydantic Model:")
+        print(kwargs["pydantic_model"].model_json_schema())
+    
+    response = client.beta.chat.completions.parse(**params)
+    return response.choices[0].message.content
+```
+
+#### Method 1: Using the pydantic model automatically generated via output_format
+```python
+parse_yaml(system_prompt = "You are a helpful assistent",
+    user_prompt = "Generate a birthday event for Alex",
+    output_format = {"name": "str",
+                     "date": "str",
+                     "participants": "only male names, list[str]"},
+                     llm = llm)
+```
+
+#### Method 2: Using the pydantic model specified in `parse_yaml` input
+```python
+from pydantic import BaseModel, Field
+
+class CalendarEvent(BaseModel):
+    name: str
+    date: str
+    participants: list[str] = Field(..., description = "only male names")
+
+parse_yaml(system_prompt = "You are a helpful assistent",
+    user_prompt = "Generate a birthday event for Alex", 
+    pydantic_model = CalendarEvent,
+    llm = llm)
+```
+
 ---
 
 For Agentic Framework, do check out AgentJo (the official Agentic Framework building on StrictJSON). This will make the StrictJSON repo neater and this github will focus on using StrictJSON for LLM Output Parsing
 - https://github.com/tanchongmin/agentjo
 
----
+--- 
 
-### Base Functionalities (see Tutorial.ipynb)
+## How do I use this? 
+1. Download package via command line ```pip install strictjson```
+2. Import the required functions from ```strictjson```
+   
+### Tutorials and Community Support
+- Created: 7 Apr 2023
+- Collaborators welcome
+- Discussion Channel (my discord - John's AI Group): [discord.gg/bzp87AHJy5](discord.gg/bzp87AHJy5)
+- Video for `parse_yaml` coming soon
+- Videos for `strict_json`:
+    - Video tutorial (Ask Me Anything): [https://www.youtube.com/watch?v=L4aytve5v1Q](https://www.youtube.com/watch?v=L4aytve5v1Q)
+    - Video tutorial: [https://www.youtube.com/watch?v=IjTUKAciTCg](https://www.youtube.com/watch?v=1N-znDTlhNc)
+
+### Base Functionalities (see Tutorial - strict_json.ipynb)
 - Ensures LLM outputs into a dictionary based on a JSON format (HUGE: Nested lists and dictionaries now supported)
 - Works for JSON outputs with multiple ' or " or { or } or \ or unmatched braces/brackets that may break a json.loads()
 - Supports `int`, `float`, `str`, `dict`, `list`, `array`, `code`, `Dict[]`, `List[]`, `Enum[]`, `bool` type forcing with LLM-based error correction, as well as LLM-based error correction using `type: ensure <restriction>`, and (advanced) custom user checks using `custom_checks`
@@ -79,18 +168,6 @@ For Agentic Framework, do check out AgentJo (the official Agentic Framework buil
 - Easy integration with OpenAI JSON Mode by setting `openai_json_mode = True`
 - Exposing of llm variable for `strict_json` and `Function` for easy use of self-defined LLMs
 - `AsyncFunction` and `strict_json_async` for async (and faster) processing
-
-### Tutorials and Community Support
-- Created: 7 Apr 2023
-- Collaborators welcome
-- Video tutorial (Ask Me Anything): [https://www.youtube.com/watch?v=L4aytve5v1Q](https://www.youtube.com/watch?v=L4aytve5v1Q)
-- Video tutorial: [https://www.youtube.com/watch?v=IjTUKAciTCg](https://www.youtube.com/watch?v=1N-znDTlhNc)
-- Discussion Channel (my discord - John's AI Group): [discord.gg/bzp87AHJy5](discord.gg/bzp87AHJy5)
-
-## How do I use this? 
-1. Download package via command line ```pip install strictjson```
-2. Import the required functions from ```strictjson```
-3. Set up the relevant API Keys for your LLM if needed. Refer to ```Tutorial.ipynb``` for how to do it for Jupyter Notebooks.
 
 ## How does it work?
 - Extract JSON values as a string using a special regex (add delimiters to ```key``` to make ```###key###```) to split keys and values. (New!) Also works for nested datatypes by splitting recursively.
@@ -197,122 +274,7 @@ print(res)
 
 ```'Sample venues': [{'Venue': 'Beachside Resort', 'Description': 'A beautiful resort with stunning views of the beach. Perfect for a summer birthday party.'}, {'Venue': 'Indoor Trampoline Park', 'Description': 'An exciting venue with trampolines and fun activities. Ideal for an active and energetic birthday celebration.'}]}```
 
-## 4. Functions
-- Enhances ```strict_json()``` with a function-like interface for repeated use of modular LLM-based functions (or wraps external functions)
-- Use angle brackets <> to enclose input variable names. First input variable name to appear in `fn_description` will be first input variable and second to appear will be second input variable. For example, `fn_description = 'Adds up two numbers, <var1> and <var2>'` will result in a function with first input variable `var1` and second input variable `var2`
-- (Optional) If you would like greater specificity in your function's input, you can describe the variable after the : in the input variable name, e.g. `<var1: an integer from 10 to 30>`. Here, `var1` is the input variable and `an integer from 10 to 30` is the description.
-- (Optional) If your description of the variable is one of `int`, `float`, `str`, `dict`, `list`, `array`, `code`, `Dict[]`, `List[]`, `Array[]`, `Enum[]`, `bool`, we will enforce type checking when generating the function inputs in `get_next_subtask` method of the `Agent` class. Example: `<var1: int>`. Refer to Section 3. Type Forcing Output Variables for details.
-- Inputs (primary):
-    - **fn_description**: String. Function description to describe process of transforming input variables to output variables. Variables must be enclosed in <> and listed in order of appearance in function input.
-        - New feature: If `external_fn` is provided and no `fn_description` is provided, then we will automatically parse out the fn_description based on docstring of `external_fn`. The docstring should contain the names of all compulsory input variables
-        - New feature: If `external_fn` is provided and no `output_format` is provided, then we will automatically derive the `output_format` from the function signature
-    - **output_format**: Dict. Dictionary containing output variables names and description for each variable.
-    
-- Inputs (optional):
-    - **examples** - Dict or List[Dict]. Examples in Dictionary form with the input and output variables (list if more than one)
-    - **external_fn** - Python Function. If defined, instead of using LLM to process the function, we will run the external function. 
-        If there are multiple outputs of this function, we will map it to the keys of `output_format` in a one-to-one fashion
-    - **fn_name** - String. If provided, this will be the name of the function. Otherwise, if `external_fn` is provided, it will be the name of `external_fn`. Otherwise, we will use LLM to generate a function name from the `fn_description`
-    - **kwargs** - Dict. Additional arguments you would like to pass on to the strict_json function
-        
-- Outputs:
-    JSON of output variables in a dictionary (similar to ```strict_json```)
-    
-#### Example Usage 1 (Description only)
-```python
-# basic configuration with variable names (in order of appearance in fn_description)
-fn = Function(fn_description = 'Output a sentence with <obj> and <entity> in the style of <emotion>', 
-                     output_format = {'output': 'sentence'},
-                     llm = llm)
-
-# Use the function
-fn('ball', 'dog', 'happy') #obj, entity, emotion
-```
-
-#### Example Output 1
-```{'output': 'The happy dog chased the ball.'}```
-
-#### Example Usage 2 (Examples only)
-```python
-# Construct the function: infer pattern from just examples without description (here it is multiplication)
-fn = Function(fn_description = 'Map <var1> and <var2> to output based on examples', 
-                     output_format = {'output': 'final answer'}, 
-                     examples = [{'var1': 3, 'var2': 2, 'output': 6}, 
-                                 {'var1': 5, 'var2': 3, 'output': 15}, 
-                                 {'var1': 7, 'var2': 4, 'output': 28}],
-                     llm = llm)
-
-# Use the function
-fn(2, 10) #var1, var2
-```
-
-#### Example Output 2
-```{'output': 20}```
-
-#### Example Usage 3 (Description and Examples)
-```python
-# Construct the function: description and examples with variable names
-# variable names will be referenced in order of appearance in fn_description
-fn = Function(fn_description = 'Output the sum and difference of <num1> and <num2>', 
-                 output_format = {'sum': 'sum of two numbers', 
-                                  'difference': 'absolute difference of two numbers'},
-                 examples = {'num1': 2, 'num2': 4, 'sum': 6, 'difference': 2},
-                 llm = llm)
-
-# Use the function
-fn(3, 4) #num1, num2
-```
-
-#### Example Output 3
-```{'sum': 7, 'difference': 1}```
-
-#### Example Usage 4 (External Function with automatic inference of fn_description and output_format - Preferred)
-```python
-# Docstring should provide all input variables, otherwise we will add it in automatically
-# We will ignore shared_variables, *args and **kwargs
-# No need to define llm in Function for External Functions
-from typing import List
-def add_number_to_list(num1: int, num_list: List[int], *args, **kwargs) -> List[int]:
-    '''Adds num1 to num_list'''
-    num_list.append(num1)
-    return num_list
-
-fn = Function(external_fn = add_number_to_list)
-
-# Show the processed function docstring
-print(str(fn))
-
-# Use the function
-fn(3, [2, 4, 5])
-```
-#### Example Output 5
-`Description: Adds <num1: int> to <num_list: list>`
-
-`Input: ['num1', 'num_list']`
-
-`Output: {'num_list': 'Array of numbers'}`
-
-`{'num_list': [2, 4, 5, 3]}`
-
-#### Example Usage 5 (External Function with manually defined fn_description and output_format - Legacy Approach)
-```python
-def binary_to_decimal(x):
-    return int(str(x), 2)
-
-# an external function with a single output variable, with an expressive variable description
-fn = Function(fn_description = 'Convert input <x: a binary number in base 2> to base 10', 
-            output_format = {'output1': 'x in base 10'},
-            external_fn = binary_to_decimal,
-            llm = llm)
-
-# Use the function
-fn(10) #x
-```
-
-#### Example Output 4
-```{'output1': 2}```
-
-## 5. Integrating with OpenAI JSON Mode
+## 4. Integrating with OpenAI JSON Mode
 - If you want to use the OpenAI JSON Mode, you can simply add in ```openai_json_mode = True``` and set ```model = 'gpt-4-1106-preview'``` or ```model = 'gpt-3.5-turbo-1106'``` in ```strict_json``` or ```Function```
 - We will set model to ```gpt-3.5-turbo-1106``` by default if you provide an invalid model
 - This does not work with the `llm` variable
@@ -334,7 +296,7 @@ print(res)
 #### Example Output
 ```{'Sentiment': 'positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 6}```
 
-## 6. Nested Outputs
+## 5. Nested Outputs
 - StrictJSON supports nested outputs like nested lists and dictionaries
 
 #### Example Input
@@ -373,12 +335,12 @@ print(res)
     
 `}`
 
-## 7. Return as JSON
+## 6. Return as JSON
 - By default, `strict_json` returns a Python Dictionary
 - If needed to parse as JSON, simply set `return_as_json=True`
 - By default, this is set to `False` in order to return a Python Dictionry
 
-## 8. Async Mode
+## 7. Async Mode
 
 - `AsyncFunction` and `strict_json_async`
     - These are the async equivalents of `Function` and `strict_json`
@@ -422,17 +384,3 @@ print(res)
 
 #### Example Output
 `{'Sentiment': 'Positive', 'Adjectives': ['beautiful', 'sunny'], 'Words': 7}`
-
-#### Example Input (AsyncFunction)
-```python
-fn =  AsyncFunction(fn_description = 'Output a sentence with <obj> and <entity> in the style of <emotion>', 
-                     output_format = {'output': 'sentence'},
-                     llm = llm_async) # set this to your own LLM
-
-res = await fn('ball', 'dog', 'happy') #obj, entity, emotion
-
-print(res)
-```
-
-#### Example Output
-`{'output': 'The dog happily chased the ball.'}`

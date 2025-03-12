@@ -1,3 +1,25 @@
+13 Mar 2025 (v6.1.0)
+- HUGE Update: `parse_yaml`
+- `parse_yaml` now does not need exec() to create pydantic model, as it does compositional model creation programmatically, making it safer to use
+- Prompt for `parse_yaml optimised for a lot of common models:
+    - Claude 3.5 Sonnet
+    - Claude 3.7 Sonnet
+    - gpt-o3-mini
+    - gpt-o1-mini
+    - gpt-4o-mini
+    - gpt-4o
+    - Meta Llama 3.3 70B
+    - Meta Llama 3.2 90B (Note: Smaller versions of Llama 3.2 do not work well with YAML)
+    - Meta Llama 3.1 70B (Note: Smaller versions of Llama 3.1 do not work well with YAML)
+    - DeepSeek-V3
+    - DeepSeek-R1
+    - QwW 32B
+    - Gemini 2.0 Flash
+    - Gemini 2.0 Flash-Lite
+- Provided a convenient interface to either use `output_format` or `pydantic_model` to directly interface with LLM provider's structured output parser (if needed)
+- Removed `functions.py` and `utils.py` in order to retain only the essentials - LLM parsing - for strictjson repo
+- `parse_yaml` will now be the main focus for development, `strict_json` is still around for legacy compatibility only
+
 21 Feb 2025 (v6.0.0)
 - HUGE Update: Now comes with `parse_yaml` and `parse_yaml_async` function
 - Uses the same type checking and output_format as `strict_json`, with optional `type: ` parameter
