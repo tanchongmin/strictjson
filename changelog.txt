@@ -1,3 +1,11 @@
+2 Apr 2025 (v6.1.1)
+- Fixed backslash single quotes in parse_yaml by replacing them with double single quotes ('') for better yaml parsing (credit: hornwijaya)
+- Added awaitable as a requirement for llm in parse_yaml_async
+- Enum is now output as a value instead of as an Enum instance
+- Added in a way to check whether **kwargs is present in llm input variable - if so, then pass system_prompt, user_prompt and **kwargs into it. Otherwise, only pass in system_prompt and user_prompt.
+- Included an additional example for invoice extraction in Tutorial - parse_yaml.ipynb
+- Fixed empty string parsing for `strict_json` and `strict_json_async`, and also key and value names enclosed with ` (a trait of gpt-4o-mini - this is non-standard json output, but we need to cater for this as well)
+
 13 Mar 2025 (v6.1.0)
 - HUGE Update: `parse_yaml`
 - `parse_yaml` now does not need exec() to create pydantic model, as it does compositional model creation programmatically, making it safer to use

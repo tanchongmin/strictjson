@@ -23,7 +23,7 @@ def convert_to_dict(field: str, keys: dict, delimiter: str) -> dict:
     output_d = {}
     for key in keys:
         # if output field missing, raise an error
-        if f"'{delimiter}{key}{delimiter}':" not in field and f'"{delimiter}{key}{delimiter}":' not in field: 
+        if f"'{delimiter}{key}{delimiter}':" not in field and f'"{delimiter}{key}{delimiter}":' not in field and f'`{delimiter}{key}{delimiter}`:' not in field: 
             # try to fix it if possible
             ## Cases with no delimiter but with key and/or incomplete quotations
             if field.count(f"'{key}':") == 1:
@@ -55,15 +55,15 @@ def convert_to_dict(field: str, keys: dict, delimiter: str) -> dict:
                 
     # if all is good, we then extract out the fields
     # Use regular expressions to extract keys and values
-    pattern = fr",*\s*['|\"]{delimiter}([^#]*){delimiter}['|\"]:\s*"
+    pattern = fr",*\s*[\'\"`]{delimiter}([^#]*){delimiter}[\'\"`]:\s*"
 
     matches = re.split(pattern, str(field[1:-1]).strip())
 
     # remove null matches
     my_matches = [match for match in matches if match !='']
 
-    # remove the ' from the value matches
-    curated_matches = [match[1:-1] if match[0] in '\'"' else match for match in my_matches]
+    # remove the ' " or ` from the value matches
+    curated_matches = [match[1:-1] if match[0] in '\'"`' else match for match in my_matches]
 
     # create a dictionary
     for i in range(0, len(curated_matches), 2):

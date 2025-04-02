@@ -8,7 +8,15 @@ from enum import Enum
 import re
 import warnings
 import json
+import inspect
 
+### Helper Functions ###
+def ensure_awaitable(func, name):
+    """ Utility function to check if the function is an awaitable coroutine function """
+    if func is not None and not inspect.iscoroutinefunction(func):
+        raise TypeError(f"{name} must be an awaitable coroutine function")
+
+### Main Functions ###
 
 def parse_yaml(system_prompt: str, 
                user_prompt: str, 
@@ -43,8 +51,19 @@ def parse_yaml(system_prompt: str,
     '''
 
     import yaml
+    # add in more yaml safe_load null options
+    yaml.SafeLoader.add_implicit_resolver(
+                    u'tag:yaml.org,2002:null',
+                    re.compile(r'^(?:~|null|Null|NULL|None)$'),
+                    list("~nN")
+                )
+    
     if llm is None:
         raise Exception("You need to assign an llm variable that takes in system_prompt and user_prompt as inputs, and outputs the completion")
+
+    # check whether llm accepts kwargs
+    sig = inspect.signature(llm)
+    accept_kwargs = any(param.kind == inspect.Parameter.VAR_KEYWORD for param in sig.parameters.values())
 
     if not output_format and not pydantic_model:
         raise Exception("You need to either have an output_format or a pydantic_model specified")
@@ -109,15 +128,15 @@ Output the appropriate values that meets the required datatypes specified.
 Even if schema does not make sense, just output default values to suit it.
 '''
         
-    generated_code, data, Yaml_Schema, error = None, None, None, None
+    generated_code, data, pydantic_model, error = None, None, None, None
 
     if type_checking:
         # Convert output format into pydantic
         try:
-            Yaml_Schema = convert_schema_to_pydantic(output_format)
-            kwargs["pydantic_model"] = Yaml_Schema
+            pydantic_model = convert_schema_to_pydantic(output_format)
+            kwargs["pydantic_model"] = pydantic_model
             if debug:
-                print("\n\n## Generated YAML Schema:", Yaml_Schema.schema(), sep='\n')
+                print("\n\n## Generated YAML Schema:", pydantic_model.schema(), sep='\n')
     
         except Exception as e:
             error = e
@@ -128,14 +147,16 @@ Even if schema does not make sense, just output default values to suit it.
         print("\n\n## System Prompt:", system_prompt + initial_prompt)
         print("\n\n## User Prompt:", user_prompt)
         
-    # pass it through an llm
-    res = llm(system_prompt + initial_prompt, user_prompt, **kwargs)
+    # pass it through an llm (add in kwargs if llm accepts)
+    if accept_kwargs:
+        res = llm(system_prompt + initial_prompt, user_prompt, **kwargs)
+    else:
+        res = llm(system_prompt + initial_prompt, user_prompt)
 
     # show user the llm result if verbose or debug
     if verbose or debug:
         print("\n\n## LLM Result:", res)
 
-        
     for cur_try in range(num_tries):
         if cur_try > 0:
             my_warning = f"LLM Parsing failed at attempt {cur_try}.\nRetrying..."
@@ -151,7 +172,12 @@ Even if schema does not make sense, just output default values to suit it.
 
             if debug:
                 print("\n\n## Parsed YAML before type checks:", cleaned_yaml, sep = '\n')
-            data = yaml.safe_load(cleaned_yaml)
+            try:
+                data = yaml.safe_load(cleaned_yaml)
+            except Exception as e:
+                # replace backslash single quotes with double single quotes for better parsing by yaml.safe_load
+                cleaned_yaml = cleaned_yaml.replace("\'", "''")
+                data = yaml.safe_load(cleaned_yaml)
 
         except Exception as e:
             error = "Parsing of YAML failed\n" + str(e)
@@ -163,8 +189,11 @@ Even if schema does not make sense, just output default values to suit it.
                 continue
 
             # feed in the error to the llm and try again
-            res = llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
-
+            if accept_kwargs:
+                res = llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
+            else:
+                res = llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}")
+        
             if debug:
                 print("\n\n## LLM retry response:", res)
 
@@ -172,10 +201,10 @@ Even if schema does not make sense, just output default values to suit it.
 
         ### Test 2: Perform type checks
         try:
-            Yaml_Schema.model_validate(data)
+            validated_data = pydantic_model.model_validate(data)
     
             # return the dictionary-processed data
-            return data
+            return validated_data.model_dump(by_alias=True)
     
         except Exception as e:
             error = "Type checks failed\n" + str(e)
@@ -187,7 +216,10 @@ Even if schema does not make sense, just output default values to suit it.
                 continue
 
             # feed in the error to the llm and try again
-            res = llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
+            if accept_kwargs:
+                res = llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
+            else:
+                res = llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}")
 
             if debug:
                 print("\n\n## LLM retry response:", res)
@@ -233,8 +265,23 @@ async def parse_yaml_async(system_prompt: str,
     '''
 
     import yaml
+    # add in more yaml safe_load null options
+    yaml.SafeLoader.add_implicit_resolver(
+                    u'tag:yaml.org,2002:null',
+                    re.compile(r'^(?:~|null|Null|NULL|None)$'),
+                    list("~nN")
+                )
+    
     if llm is None:
         raise Exception("You need to assign an llm variable that takes in system_prompt and user_prompt as inputs, and outputs the completion")
+
+    # make sure llm is awaitable
+    else:
+        ensure_awaitable(llm, 'llm')
+
+    # check whether llm accepts kwargs
+    sig = inspect.signature(llm)
+    accept_kwargs = any(param.kind == inspect.Parameter.VAR_KEYWORD for param in sig.parameters.values())
 
     if not output_format and not pydantic_model:
         raise Exception("You need to either have an output_format or a pydantic_model specified")
@@ -299,15 +346,15 @@ Output the appropriate values that meets the required datatypes specified.
 Even if schema does not make sense, just output default values to suit it.
 '''
         
-    generated_code, data, Yaml_Schema, error = None, None, None, None
+    generated_code, data, pydantic_model, error = None, None, None, None
 
     if type_checking:
         # Convert output format into pydantic
         try:
-            Yaml_Schema = convert_schema_to_pydantic(output_format)
-            kwargs["pydantic_model"] = Yaml_Schema
+            pydantic_model = convert_schema_to_pydantic(output_format)
+            kwargs["pydantic_model"] = pydantic_model
             if debug:
-                print("\n\n## Generated YAML Schema:", Yaml_Schema.schema(), sep='\n')
+                print("\n\n## Generated YAML Schema:", pydantic_model.schema(), sep='\n')
     
         except Exception as e:
             error = e
@@ -317,9 +364,11 @@ Even if schema does not make sense, just output default values to suit it.
     if verbose:
         print("\n\n## System Prompt:", system_prompt + initial_prompt)
         print("\n\n## User Prompt:", user_prompt)
-        
-    # pass it through an llm
-    res = await llm(system_prompt + initial_prompt, user_prompt, **kwargs)
+
+    if accept_kwargs:
+        res = await llm(system_prompt + initial_prompt, user_prompt, **kwargs)
+    else:
+        res = await llm(system_prompt + initial_prompt, user_prompt)
 
     # show user the llm result if verbose or debug
     if verbose or debug:
@@ -340,7 +389,12 @@ Even if schema does not make sense, just output default values to suit it.
 
             if debug:
                 print("\n\n## Parsed YAML before type checks:", cleaned_yaml, sep = '\n')
-            data = yaml.safe_load(cleaned_yaml)
+            try:
+                data = yaml.safe_load(cleaned_yaml)
+            except Exception as e:
+                # replace backslash single quotes with double single quotes for better parsing by yaml.safe_load
+                cleaned_yaml = cleaned_yaml.replace("\'", "''")
+                data = yaml.safe_load(cleaned_yaml)
 
         except Exception as e:
             error = "Parsing of YAML failed\n" + str(e)
@@ -352,7 +406,10 @@ Even if schema does not make sense, just output default values to suit it.
                 continue
 
             # feed in the error to the llm and try again
-            res = await llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
+            if accept_kwargs:
+                res = await llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
+            else:
+                res = await llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}")
 
             if debug:
                 print("\n\n## LLM retry response:", res)
@@ -361,10 +418,10 @@ Even if schema does not make sense, just output default values to suit it.
 
         ### Test 2: Perform type checks
         try:
-            Yaml_Schema.model_validate(data)
+            validated_data = pydantic_model.model_validate(data)
     
             # return the dictionary-processed data
-            return data
+            return validated_data.model_dump(by_alias=True)
     
         except Exception as e:
             error = "Type checks failed\n" + str(e)
@@ -376,7 +433,10 @@ Even if schema does not make sense, just output default values to suit it.
                 continue
 
             # feed in the error to the llm and try again
-            res = await llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
+            if accept_kwargs:
+                res = await llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}", **kwargs)
+            else:
+                res = await llm(retry_prompt, f"Incorrectly formatted YAML block: {res}\nError: {error}")
 
             if debug:
                 print("\n\n## LLM retry response:", res)
@@ -567,7 +627,7 @@ def process_schema_value(key: str, value: Any, parent: str) -> (str, Optional[st
     else:
         return ("Any", None, {})
 
-def convert_schema_to_pydantic(schema: Dict, main_model: str = "Yaml_Schema") -> Any:
+def convert_schema_to_pydantic(schema: Dict, main_model: str = "pydantic_model") -> Any:
     """
     Dynamically converts a schema dictionary into Pydantic models.
     """
@@ -576,6 +636,10 @@ def convert_schema_to_pydantic(schema: Dict, main_model: str = "Yaml_Schema") ->
     
     # Dictionary to cache generated Enum types.
     generated_enums: Dict[str, Any] = {}
+
+    # return enum values as the value itself rather than as an Enum instance
+    class Config:
+        use_enum_values = True
 
     # Process top-level fields.
     for key, val in schema.items():
@@ -743,14 +807,14 @@ def convert_schema_to_pydantic(schema: Dict, main_model: str = "Yaml_Schema") ->
                 if sdesc:
                     sub_params["description"] = sdesc
                 fields[sub_attr] = (parse_type_string(stype_str), Field(..., **sub_params))
-            extra_models[name] = create_model(name, **fields)
+            extra_models[name] = create_model(name, __config__=Config, **fields)
 
     resolved_main_fields = {}
     for field_name, (ftype, field_def) in main_fields.items():
         resolved_type = parse_type_string(ftype)
         resolved_main_fields[field_name] = (resolved_type, field_def)
     
-    MainModel = create_model(main_model, **resolved_main_fields)
+    MainModel = create_model(main_model, __config__=Config, **resolved_main_fields)
     
     for model in extra_models.values():
         model.update_forward_refs()
