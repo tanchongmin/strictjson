@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "strictjson"
-version = "6.1.1"
+version = "6.1.2"
 authors = [
   { name="John Tan Chong Min", email="tanchongmin@gmail.com" },
 ]
@@ -17,7 +17,7 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
-dependencies = ["asyncio", "pydantic"]
+dependencies = ["pydantic"]
 
 [project.urls]
 Homepage = "https://github.com/tanchongmin/strictjson"

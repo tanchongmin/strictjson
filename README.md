@@ -1,4 +1,4 @@
-# StrictJSON v6.1.1 - A Structured Output Framework for LLM Outputs
+# StrictJSON v6.1.2 - A Structured Output Framework for LLM Outputs
 
 ## New Functionalities (see Tutorial - parse_yaml.ipynb)
 #### Why YAML?

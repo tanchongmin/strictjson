@@ -1,3 +1,6 @@
+15 May 2025 (v6.1.2)
+- Removed asyncio from dependencies as it is already in python package
+
 2 Apr 2025 (v6.1.1)
 - Fixed backslash single quotes in parse_yaml by replacing them with double single quotes ('') for better yaml parsing (credit: hornwijaya)
 - Added awaitable as a requirement for llm in parse_yaml_async
