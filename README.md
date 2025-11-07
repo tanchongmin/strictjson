@@ -137,7 +137,7 @@ parse_yaml(
 ```python
 parse_yaml(
   system_prompt="Extract information",
-  user_prompt="Article about NASA",
+  user_prompt=article_about_nasa,
   output_format={
     "Entities": "organisations only, List[str]",
     "Sentiment": "Enum['Happy','Sad','Neutral']",
