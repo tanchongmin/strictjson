@@ -1,10 +1,8 @@
 # StrictJSON v6.2.0 — `parse_yaml`
 
-## Makes LLM give structured output in a neat, tidy format
+## Structured Output Parser for Large Language Models (LLMs)
 
-`parse_yaml` helps you get clean, structured output from Large Language Models (LLMs) like ChatGPT. It tells the LLM exactly what shape the answer should be, so you don’t have to fix it later.
-
-It uses YAML, a simple way of writing lists and information, kind of like an easier version of JSON. It also checks the output automatically to make sure it makes sense.
+`parse_yaml` helps you get clean, structured output from LLMs like ChatGPT. It tells the LLM the required output format and data types, to ensure strict conformity to the output format.
 
 > Old versions (e.g. `strict_json`) that used JSON still work, but `parse_yaml` is the new and improved method.
 
@@ -12,25 +10,33 @@ It uses YAML, a simple way of writing lists and information, kind of like an eas
 
 ## What Makes It Useful
 
-* YAML structure avoids the need to do backslash quotation or brackets, simplifying output and making parsing easier compared to JSON
-* Shorter output context with YAML compared to JSON output
-* Creates / uses a Pydantic model to do type checking, ensuring robustness of output
-* Fixes mistakes automatically (tries again up to three times by default - changeable via `num_tries` parameter).
-* Works with any LLM model (ChatGPT, Claude, Gemini, etc.).
+* YAML structure avoids the need for backslash escaping or heavy bracket use, simplifying output and parsing compared to JSON.
+* Shorter output context size with YAML than JSON.
+* Creates / uses a Pydantic model for type checking, ensuring robustness of output.
+* Fixes mistakes automatically (tries again up to three times by default — configurable via `num_tries`).
+* Works with any LLM model (ChatGPT, Claude, Gemini, etc.) with adequate YAML understanding capabilities.
 
 ---
 
 ## How to Install
 
-```
+```bash
 pip install strictjson
 ```
 
 ---
 
+## Tutorial
+
+[Basics](Tutorial%20-%20parse_yaml.ipynb): Teaches how to create LLM functions with `system_prompt`, `user_prompt` as input parameters, and output a string as output. Also covers both sync and async modes of `parse_yaml`
+
+[Multimodal Input](Tutorial%20-%20Multimodal%20Inputs.ipynb): Teaches how to use the decorator `image_parser` and `image_parser_async` to get LLM to view images
+
+---
+
 ## Quick Example
 
-Here is a small program that asks the AI for a blog post idea:
+Here’s a simple program that asks the AI for a blog post idea:
 
 ```python
 from strictjson import parse_yaml
@@ -50,7 +56,7 @@ def llm(system_prompt: str, user_prompt: str, **kwargs) -> str:
     return resp.choices[0].message.content
 
 result = parse_yaml(
-  system_prompt="You are concise",
+  system_prompt="You are a friendly assistant.",
   user_prompt="Write a blog post idea about AI in education",
   output_format={
     "title": "str",
@@ -70,48 +76,48 @@ print(result)
 
 You can use simple data types like these:
 
-| Type             | Example (in Python)                    | Meaning                          |
-| ---------------- | -------------------------------------- | -------------------------------- |
-| `str`            | "Hello"                                | text or words                    |
-| `int`            | 5                                      | whole number                     |
-| `float`          | 3.14                                   | number with decimals             |
-| `bool`           | True / False                           | yes or no                        |
-| `List[int]`      | [1, 2, 3]                              | a list of numbers                |
-| `Dict[str, Any]` | {"a": 1, "b": 2}                       | a dictionary (key-value pairs)   |
-| `date`           | 2025-05-09                             | a calendar date                  |
-| `datetime`       | 2025-05-09T14:30                       | date and time                    |
-| `UUID`           | "550e8400-e29b-41d4-a716-446655440000" | a unique ID                      |
-| `Decimal`        | 12.50                                  | an exact number (good for money) |
-| `None`           | None                                   | a null value                     |
+| Type             | Example Value (in Python)                      | Meaning / Notes                                            |
+| ---------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| `str`            | `"Hello"`                                      | A string of text.                                          |
+| `int`            | `5`                                            | A whole number (integer).                                  |
+| `float`          | `3.14`                                         | A floating-point number (decimal).                         |
+| `bool`           | `True` / `False`                               | A boolean value — yes/no, true/false.                      |
+| `List[int]`      | `[1, 2, 3]`                                    | A list (array-like) of integers. From `typing`.            |
+| `Dict[str, Any]` | `{"a": 1, "b": 2}`                             | A dictionary (key–value pairs). From `typing`.             |
+| `date`           | `date(2025, 5, 9)`                             | A calendar date (`from datetime import date`).             |
+| `datetime`       | `datetime(2025, 5, 9, 14, 30)`                 | A date and time (`from datetime import datetime`).         |
+| `UUID`           | `UUID("550e8400-e29b-41d4-a716-446655440000")` | A universally unique identifier (`from uuid import UUID`). |
+| `Decimal`        | `Decimal("12.50")`                             | An exact decimal number (`from decimal import Decimal`).   |
+| `None`           | `None`                                         | The null or "no value" object in Python.                   |
 
 A datatype `Any` refers to any datatype.
 
-A datatype `list` or `dict` used without [], will be defaulted to `List[Any]` or `Dict[str, Any]`.
+All of the datatypes in `parse_yaml` are similar to Python type hints.
 
-You can also use `Enum` to force a datatype within the choices listed, e.g. `Enum["A", "B", "C"]` will force the output to be `A`, `B` or `C`
-You can use `Optional` for fields that can return null values, e.g. `Optional[str]` either returns a string or a null value
-You can use `Union` for fields that can return more than one datatype, e.g. `Union[str, int]` returns either str or int
+If you write `list` or `dict` without brackets, we interpret them as `List[Any]` and `Dict[str, Any]`.
 
-We also support [PEP 604](https://peps.python.org/pep-0604/) way of using |
-e.g. str | int -> Union[str, int]
-e.g. str | None -> Optional[str]
+If you write `List[{'key1': 'str', 'key2': 'int'}]`, we will ensure the output to be a list of dictionaries with the desired key names and output types for each key. This is useful if you need a list of a particular schema.
 
+You can constrain a field to a fixed set of values using Enum:
 
----
+> `Enum['A','B','C']` — limits output to one of these values. (Note: Use `Enum` instead of the `Literal` type hint in Python)
 
-## What Happens Behind the Scenes
+You can use `Optional` for fields that can return null values, e.g. `Optional[str]` returns either a string or a null value.
 
-1. You tell `parse_yaml` what kind of answer you want.
-2. It builds a simple template for the LLM to follow.
-3. The LLM fills in that template in YAML format.
-4. `parse_yaml` checks if the result is correct. If not, it fixes or retries it.
-5. You get a clean Python dictionary at the end.
+You can use `Union` for fields that can return more than one datatype, e.g. `Union[str, int]` returns either a string or integer.
+
+We also support [PEP 604](https://peps.python.org/pep-0604/) syntax using `|`:
+
+* `str | int` → `Union[str, int]`
+* `str | None` → `Optional[str]`
+
+`List[...]` and `Dict[...]` are **type hints** — the actual runtime values are `list` and `dict`. Likewise, `date`, `datetime`, `UUID`, and `Decimal` appear as proper Python objects in the result.
 
 ---
 
 ## More Examples
 
-**1. Creative ideas**
+### 1. Creative ideas
 
 ```python
 parse_yaml(
@@ -119,7 +125,7 @@ parse_yaml(
   user_prompt="Give me 5 names on a weather theme",
   output_format={
     "Names": "5 cool weather names, List[str]",
-    "Meanings": "name → meaning, Dict[str, str]"
+    "Meanings": "name -> meaning, Dict[str, str]"
   },
   llm=llm,
 )
@@ -142,7 +148,7 @@ parse_yaml(
 
 ---
 
-**2. Finding facts**
+### 2. Finding facts
 
 ```python
 parse_yaml(
@@ -169,7 +175,7 @@ parse_yaml(
 
 ---
 
-**3. Nested information**
+### 3. Nested information
 
 ```python
 parse_yaml(
@@ -189,7 +195,7 @@ parse_yaml(
 ```python
 {
   "name": "Alex's Birthday Party",
-  "date": "2026-03-12",
+  "date": date(2026, 3, 12),
   "participants": [
     {"name": "Ava", "age": 8, "gift": "Lego set"},
     {"name": "Ben", "age": 9, "gift": "Book"},
@@ -228,8 +234,6 @@ result = parse_yaml(
 
 ---
 
----
-
 ## Async Example (For Advanced Users)
 
 If you are writing an async app, use this version:
@@ -255,20 +259,23 @@ result = await parse_yaml_async(
   output_format={"Summary": "<= 3 sentences, str"},
   llm=llm_async,
 )
-#{"Summary": "The research explores how artificial intelligence can personalize learning for students. It highlights improved engagement and adaptive feedback as key benefits. The study concludes that AI can complement teachers by automating routine assessments."}
+# {'Summary': 'The research explores how artificial intelligence can personalize learning for students. It highlights improved engagement and adaptive feedback as key benefits. The study concludes that AI can complement teachers by automating routine assessments.'}
 ```
 
 ---
 
 ## Multimodal Inputs (For Advanced Users)
 
-## Image Reading (Vision)
+### Image Reading (Vision)
 
-`parse_yaml` can process images with decorator `@image_parser` 
-`parse_yaml_async` can process images with decorator `@image_parser_async`.
-They convert any `<<image_url_or_path>>` in your prompt into structured multimodal input for vision-capable models (like Gemini, Claude, or GPT-4o). You need to use the OpenAI interface to use this parser.
+`parse_yaml` can process images using the decorator `@image_parser`.
 
-### Example (Sync)
+`parse_yaml_async` can process images using `@image_parser_async`.
+
+They convert any `<<image_url_or_path>>` in your prompt into structured multimodal input for vision-capable models (like Gemini, Claude, or GPT-4o).
+You need to use the OpenAI-compatible interface to use this parser.
+
+#### Example (Sync)
 
 ```python
 from strictjson import parse_yaml
@@ -306,7 +313,7 @@ res = parse_yaml(
 
 ---
 
-### Example (Async)
+#### Example (Async)
 
 ```python
 from strictjson import parse_yaml_async
@@ -344,7 +351,7 @@ res = await parse_yaml_async(
 ## Project Info
 
 * Version: 6.2.0
-* Updated: 6 Nov 2025
+* Updated: 7 Nov 2025
 * Created: 7 Apr 2023
 * Tested with: Pydantic 2.12.4
 * Community: [John's AI Group on Discord](https://discord.gg/bzp87AHJy5)
