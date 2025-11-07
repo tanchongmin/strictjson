@@ -1,10 +1,10 @@
 # StrictJSON v6.2.0 — `parse_yaml`
 
-## Make AI give answers in a neat, tidy format
+## Makes LLM give structured output in a neat, tidy format
 
-`parse_yaml` helps you get clean, structured answers from Large Language Models (LLMs) like ChatGPT. It tells the LLM exactly what shape the answer should be, so you don’t have to fix it later.
+`parse_yaml` helps you get clean, structured output from Large Language Models (LLMs) like ChatGPT. It tells the LLM exactly what shape the answer should be, so you don’t have to fix it later.
 
-It uses YAML, a simple way of writing lists and information, kind of like an easier version of JSON. It also checks the answer automatically to make sure it makes sense.
+It uses YAML, a simple way of writing lists and information, kind of like an easier version of JSON. It also checks the output automatically to make sure it makes sense.
 
 > Old versions (e.g. `strict_json`) that used JSON still work, but `parse_yaml` is the new and improved method.
 
@@ -12,9 +12,9 @@ It uses YAML, a simple way of writing lists and information, kind of like an eas
 
 ## What Makes It Useful
 
-* Easy to read — YAML looks like tidy notes, not messy code.
-* Checks answers — makes sure the LLM gives the right types (like numbers, dates, or words).
-* Understands many data types.
+* YAML structure avoids the need to do backslash quotation or brackets, simplifying output and making parsing easier compared to JSON
+* Shorter output context with YAML compared to JSON output
+* Creates / uses a Pydantic model to do type checking, ensuring robustness of output
 * Fixes mistakes automatically (tries again up to three times by default - changeable via `num_tries` parameter).
 * Works with any LLM model (ChatGPT, Claude, Gemini, etc.).
 
@@ -70,7 +70,7 @@ print(result)
 
 You can use simple data types like these:
 
-| Type             | Example                                | Meaning                          |
+| Type             | Example (in Python)                    | Meaning                          |
 | ---------------- | -------------------------------------- | -------------------------------- |
 | `str`            | "Hello"                                | text or words                    |
 | `int`            | 5                                      | whole number                     |
@@ -82,10 +82,20 @@ You can use simple data types like these:
 | `datetime`       | 2025-05-09T14:30                       | date and time                    |
 | `UUID`           | "550e8400-e29b-41d4-a716-446655440000" | a unique ID                      |
 | `Decimal`        | 12.50                                  | an exact number (good for money) |
+| `None`           | None                                   | a null value                     |
 
 A datatype `Any` refers to any datatype.
 
 A datatype `list` or `dict` used without [], will be defaulted to `List[Any]` or `Dict[str, Any]`.
+
+You can also use `Enum` to force a datatype within the choices listed, e.g. `Enum["A", "B", "C"]` will force the output to be `A`, `B` or `C`
+You can use `Optional` for fields that can return null values, e.g. `Optional[str]` either returns a string or a null value
+You can use `Union` for fields that can return more than one datatype, e.g. `Union[str, int]` returns either str or int
+
+We also support [PEP 604](https://peps.python.org/pep-0604/) way of using |
+e.g. str | int -> Union[str, int]
+e.g. str | None -> Optional[str]
+
 
 ---
 
