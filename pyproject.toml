@@ -14,7 +14,7 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
-license = { file = "LICENSE" }  # or { text = "MIT" }
+license = { file = "LICENSE" }
 dependencies = [
   "pydantic>=2.12.4",
   "python-dotenv>=1.2.1",
@@ -25,5 +25,6 @@ dependencies = [
 Homepage = "https://github.com/tanchongmin/strictjson"
 Issues = "https://github.com/tanchongmin/strictjson/issues"
 
-[tool.setuptools]
-license-files = ["LICEN[CS]E*"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["strictjson*"]   # ✅ only include your package
