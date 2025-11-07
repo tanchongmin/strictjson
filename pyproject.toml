@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-license = "MIT"
+license = { text = "MIT" }
 license-files = ["LICEN[CS]E*"]
 dependencies = ["pydantic>=2.12.4", "python-dotenv>=1.2.1", "pyyaml>=6.0.3"]
 
