@@ -4,6 +4,7 @@
 - Better catching of non-working format for list[] and dict[]. list[] must now contain only one datatype, and dict[] must contain exactly two datatypes
 - Allows | for datatyping: int | str -> Union[int, str], int | None -> Optional[int]
 - Created image_parser and image_parser_async decorators to parse images for model providers capable of using OpenAI API interface (such as OpenRouter)
+- Created new README.md for parse_yaml at main page and shifted the old strict_json README into strictjson/legacy
 
 15 May 2025 (v6.1.2)
 - Removed asyncio from dependencies as it is already in python package
