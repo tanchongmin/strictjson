@@ -10,7 +10,7 @@
 
 ## What Makes It Useful
 
-* YAML structure avoids the need for backslash escaping or heavy bracket use, simplifying output and parsing compared to JSON.
+* YAML structure avoids the need for backslash escaping quotation marks or brackets, simplifying output and parsing compared to JSON.
 * Shorter output context size with YAML than JSON.
 * Creates / uses a Pydantic model for type checking, ensuring robustness of output.
 * Fixes mistakes automatically (tries again up to three times by default — configurable via `num_tries`).
