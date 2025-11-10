@@ -40,9 +40,9 @@ def image_parser(func: Callable[..., Any]) -> Callable[..., Any]:
     Sync decorator version (unchanged behavior vs your original, but DRY via helper).
     """
     @wraps(func)
-    def wrapper(system_prompt: str, user_prompt: str):
+    def wrapper(system_prompt: str, user_prompt: str, **kwargs):
         contents = _parse_prompt_to_contents(user_prompt)
-        return func(system_prompt, contents)
+        return func(system_prompt, contents, **kwargs)
     return wrapper
 
 def image_parser_async(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
@@ -51,7 +51,7 @@ def image_parser_async(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awa
     Behavior matches the sync version, but awaits the wrapped coroutine function.
     """
     @wraps(func)
-    async def wrapper(system_prompt: str, user_prompt: str):
+    async def wrapper(system_prompt: str, user_prompt: str, **kwargs):
         contents = _parse_prompt_to_contents(user_prompt)
-        return await func(system_prompt, contents)
+        return await func(system_prompt, contents, **kwargs)
     return wrapper
