@@ -1,0 +1,6 @@
+from .openai_image_parser import openai_image_parser_sync, openai_image_parser_async
+from .gemini_image_parser import gemini_image_parser_sync, gemini_image_parser_async
+
+# General Alias is using OpenAI
+image_parser_sync = openai_image_parser_sync
+image_parser_async = openai_image_parser_async

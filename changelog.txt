@@ -1,3 +1,7 @@
+20 Nov 2025 (v6.3.0)
+- Added support for using StrictJSON Schema for OpenAI and Gemini models
+- Default StrictJSON will now be focused on using StrictJSON Schema to generate Pydantic for Structured Outputs from LLM Providers
+
 7 Nov 2025 (v6.2.0)
 - Added support for parse_yaml for pydantic v2.12.4
 - Made parse_yaml more robust using regex to solve keys with special characters and lines with double colons
